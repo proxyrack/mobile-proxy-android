@@ -1,7 +1,10 @@
 package com.proxyrack.control
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +28,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -42,12 +46,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.proxyrack.control.ui.theme.ProxyControlTheme
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.ClickableText
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
+
 
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
@@ -102,7 +113,7 @@ class MainActivity : ComponentActivity() {
                             }
                             StyledTextField("Your Device ID",
                                 modifier = Modifier.padding(start = 16.dp, end = 16.dp).fillMaxWidth())
-                            Text("Setup Instructions", modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp))
+                            SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
                         }
                     }
 
@@ -112,6 +123,40 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// https://stackoverflow.com/a/69549929/6716264
+@Composable
+fun SetupInstructionsLink(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    val annotatedString = buildAnnotatedString {
+        pushStringAnnotation(tag = "link", annotation = "https://google.com")
+        withStyle(
+            // It seems the underline style is being overridden somehow.
+            // When the app is opened in the emulator, the underline is visible for a split second.
+            style = SpanStyle(
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline,
+            )
+        ) {
+            append("Setup Instructions")
+        }
+        pop()
+    }
+
+    ClickableText(
+        text = annotatedString,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = modifier,
+        onClick = { offset ->
+            annotatedString.getStringAnnotations(tag = "link", start = offset, end = offset).firstOrNull()?.let {
+                // Log.d("link URL", it.item)
+
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(it.item))
+                context.startActivity(intent)
+            }
+    })
+}
+
 @Composable
 fun TitledColumn(
     title: String,
@@ -119,12 +164,11 @@ fun TitledColumn(
     content: @Composable () -> Unit
 ) {
     Box(
-        modifier = modifier.padding(16.dp)
+        modifier = Modifier.padding(16.dp)
     ) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .padding(10.dp)
-                .fillMaxSize()
                 .border(
                     width = 2.dp,
                     color = Color.Black,
