@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -30,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,6 +42,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.proxyrack.control.ui.theme.ProxyControlTheme
@@ -85,12 +90,19 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxWidth()
                                     .padding(16.dp)
                             ) {
+                                // Server IP Field
                                 StyledTextField("Server IP",
-                                    modifier = Modifier.weight(1f).padding(end = 4.dp))
+                                    modifier = Modifier.weight(1f).padding(end = 4.dp),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    )
+                                // Device IP Display Field
                                 StyledTextField("Your Device IP",
                                     enabled = false,
                                     modifier = Modifier.weight(1f).padding(start = 4.dp))
                             }
+                            StyledTextField("Your Device ID",
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp).fillMaxWidth())
+                            Text("Setup Instructions", modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp))
                         }
                     }
 
@@ -136,7 +148,13 @@ fun TitledColumn(
 }
 
 @Composable
-fun StyledTextField(label: String, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun StyledTextField(
+    label: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+                    ) {
+
     var text by remember { mutableStateOf("") }
 
     // Set colors so that even if a text field is disabled, it will
@@ -150,6 +168,8 @@ fun StyledTextField(label: String, modifier: Modifier = Modifier, enabled: Boole
         )
     }
 
+    val keyboardOptions = keyboardOptions.copy(imeAction = ImeAction.Done)
+
     OutlinedTextField(
         modifier = modifier,
         value = text,
@@ -157,6 +177,10 @@ fun StyledTextField(label: String, modifier: Modifier = Modifier, enabled: Boole
         label = { Text(label) },
         colors = colors,
         enabled = enabled,
+        keyboardOptions = keyboardOptions,
+//        keyboardActions = KeyboardActions(
+//            onDone =
+//        )
     )
 
 }
