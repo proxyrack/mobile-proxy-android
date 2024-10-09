@@ -136,6 +136,7 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
             style = SpanStyle(
                 color = MaterialTheme.colorScheme.primary,
                 textDecoration = TextDecoration.Underline,
+                fontSize = 18.sp,
             )
         ) {
             append("Setup Instructions")
@@ -145,7 +146,6 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
 
     ClickableText(
         text = annotatedString,
-        style = MaterialTheme.typography.bodyLarge,
         modifier = modifier,
         onClick = { offset ->
             annotatedString.getStringAnnotations(tag = "link", start = offset, end = offset).firstOrNull()?.let {
