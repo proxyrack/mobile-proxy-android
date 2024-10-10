@@ -30,10 +30,8 @@ object AppModule {
     fun provideSettingsRepo(
         @Named("deviceID") deviceIDAccessor: DataAccessor,
         @Named("serverIP") serverIPAccessor: DataAccessor,
-        @ApplicationContext context: Context
-        //context: Application, (was done this way in dagger hilt tutorial)
     ): SettingsRepo {
-        return SettingsRepoImpl(deviceIDAccessor, serverIPAccessor, context)
+        return SettingsRepoImpl(deviceIDAccessor, serverIPAccessor)
     }
 
     // https://stackoverflow.com/a/66603090/6716264

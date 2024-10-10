@@ -7,6 +7,5 @@ import com.proxyrack.control.domain.repository.SettingsRepo
 class SettingsRepoImpl(
     override val deviceID: DataAccessor,
     override val serverIP: DataAccessor,
-    private val context: Context,
     ) : SettingsRepo {
 }

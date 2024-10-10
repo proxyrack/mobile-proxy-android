@@ -56,9 +56,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.StateFlow
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -109,7 +110,7 @@ class MainActivity : ComponentActivity() {
                                         viewModel.updateServerIP(it)
                                     },
                                     onDone = {
-                                        viewModel.saveServerIP(this@MainActivity)
+                                        viewModel.saveServerIP()
                                     },
                                     modifier = Modifier.weight(1f).padding(end = 4.dp),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -131,7 +132,7 @@ class MainActivity : ComponentActivity() {
                                     viewModel.updateDeviceID(it)
                                 },
                                 onDone = {
-                                    viewModel.saveDeviceID(this@MainActivity)
+                                    viewModel.saveDeviceID()
                                 },
                                 modifier = Modifier.padding(start = 16.dp, end = 16.dp).fillMaxWidth())
                             SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))

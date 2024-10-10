@@ -3,10 +3,12 @@ package com.proxyrack.control
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.proxyrack.control.domain.repository.SettingsRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,7 +28,10 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo):
     val connected = _connected.asStateFlow()
 
     init {
-
+        viewModelScope.launch {
+            _serverIP.value = settingsRepo.serverIP.get()
+            _deviceID.value = settingsRepo.deviceID.get()
+        }
     }
 
     fun updateServerIP(ip: String) {
@@ -34,8 +39,10 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo):
         _serverIP.value = ip
     }
 
-    fun saveServerIP(context: Context) {
-        saveToSharedPrefs(context, "serverIP", this.serverIP.value)
+    fun saveServerIP() {
+        viewModelScope.launch {
+            settingsRepo.serverIP.set(serverIP.value)
+        }
     }
 
     fun updateDeviceIP(ip: String) {
@@ -46,23 +53,14 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo):
         _deviceID.value = id
     }
 
-    fun saveDeviceID(context: Context) {
-        saveToSharedPrefs(context, "deviceID", this.deviceIP.value)
+    fun saveDeviceID() {
+        viewModelScope.launch {
+            settingsRepo.deviceID.set(deviceID.value)
+        }
     }
 
     fun updateConnected(connected: Boolean) {
         _connected.value = connected
     }
 
-    private fun saveToSharedPrefs(context: Context, key: String, value: String) {
-
-        val sharedPreferences = context.getSharedPreferences(this.sharedPrefsName, Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putString(key, value)
-        editor.apply()
-    }
-
-    private fun restoreFromSharedPrefs(context: Context) {
-
-    }
 }
