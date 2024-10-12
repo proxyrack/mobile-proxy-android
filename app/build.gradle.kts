@@ -42,6 +42,9 @@ android {
 }
 
 dependencies {
+    implementation(files("libs/android_lib_emulator.aar"))
+
+    // hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     // For instrumentation tests

@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
+import com.proxyrack.control.domain.ConnectionStatus
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.StateFlow
 
@@ -138,16 +139,27 @@ class MainActivity : ComponentActivity() {
                             SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
                         }
                         Button(
-                            onClick = {},
+                            onClick = {
+                                viewModel.connectionButtonClicked()
+                            },
                             modifier = Modifier
                                 .padding(start = 28.dp, end = 28.dp)
                                 .fillMaxWidth()
                                 .height(50.dp)
                         ) {
-                            Text("Connect",
-                                    style = TextStyle(
-                                        fontSize = 18.sp
-                                    )
+                            val connectionStatus by viewModel.connectionStatus.collectAsState()
+
+                            val buttonText = when (connectionStatus) {
+                                ConnectionStatus.Connecting -> "Connecting..."
+                                ConnectionStatus.Connected -> "Disconnect"
+                                ConnectionStatus.Disconnected -> "Connect"
+                            }
+
+                            Text(
+                                buttonText,
+                                style = TextStyle(
+                                    fontSize = 18.sp
+                                ),
                                 )
                         }
                         TitledColumn(
