@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -138,6 +140,14 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(start = 16.dp, end = 16.dp).fillMaxWidth())
                             SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
                         }
+                        val connectionStatus by viewModel.connectionStatus.collectAsState()
+
+                        val buttonColor = when (connectionStatus) {
+                            ConnectionStatus.Connecting -> colorFromHex("#49de7d")
+                            ConnectionStatus.Connected -> colorFromHex("#f5524c")
+                            ConnectionStatus.Disconnected -> colorFromHex("#49de7d")
+                        }
+
                         Button(
                             onClick = {
                                 viewModel.connectionButtonClicked()
@@ -145,9 +155,10 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .padding(start = 28.dp, end = 28.dp)
                                 .fillMaxWidth()
-                                .height(50.dp)
+                                .height(50.dp),
+                            colors = ButtonDefaults.buttonColors().copy(containerColor = buttonColor)
                         ) {
-                            val connectionStatus by viewModel.connectionStatus.collectAsState()
+
 
                             val buttonText = when (connectionStatus) {
                                 ConnectionStatus.Connecting -> "Connecting..."
@@ -158,7 +169,7 @@ class MainActivity : ComponentActivity() {
                             Text(
                                 buttonText,
                                 style = TextStyle(
-                                    fontSize = 18.sp
+                                    fontSize = 19.sp
                                 ),
                                 )
                         }
@@ -287,4 +298,18 @@ fun StyledTextField(
             }
         )
     )
+}
+
+fun colorFromHex(hex: String): Color {
+    // Remove the hash if it's there
+    val cleanHex = hex.removePrefix("#")
+    // Parse the color, assuming it's in the format RRGGBB or AARRGGBB
+    val colorInt = cleanHex.toLong(16)
+    return if (cleanHex.length == 6) {
+        // If it's RRGGBB, add the alpha value
+        Color(colorInt or 0x00000000FF000000)
+    } else {
+        // If it's AARRGGBB, use it directly
+        Color(colorInt)
+    }
 }

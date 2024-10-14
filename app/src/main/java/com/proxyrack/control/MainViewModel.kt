@@ -13,10 +13,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import android_main.Android_main
-import android_main.Manager
-import android_main.OnConnectCallback
-import android_main.OnDisconnectCallback
+import com.proxyrack.proxylib.android.Manager
+import com.proxyrack.proxylib.android.OnConnectCallback
+import com.proxyrack.proxylib.android.OnDisconnectCallback
+import com.proxyrack.proxylib.android.Android.newManager
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo): ViewModel() {
@@ -48,13 +48,17 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo):
         Log.d("MyApp androidApiVersion", androidApiVersion)
         Log.d("MyApp pid", pid.toString())
         Log.d("MyApp cpu arch", cpuArch)
-        proxyManager = Android_main.newManager(pid, "50", androidApiVersion, cpuArch)
-        proxyManager.registerOnConnectCallback(OnConnectCallback {
-            Log.d("VM", "lambda in registerOnConnectCallback called")
-        })
-        proxyManager.registerOnDisconnectCallback(OnDisconnectCallback {
-            Log.d("VM", "lambda in registerOnDisconnectCallback called")
-        })
+        proxyManager = newManager(pid, "55", androidApiVersion, cpuArch)
+
+        proxyManager.registerOnConnectCallback {
+            _connectionStatus.value = ConnectionStatus.Connected
+            Log.d("VM", "registerOnConnectCallback called")
+        }
+
+        proxyManager.registerOnDisconnectCallback {
+            _connectionStatus.value = ConnectionStatus.Disconnected
+            Log.d("VM", "registerOnDisconnectCallback called")
+        }
     }
 
     fun updateServerIP(ip: String) {
@@ -129,19 +133,5 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo):
             }
         }
         return "unknown"
-    }
-}
-
-class ConnectCallback(private val connectionStatus: MutableStateFlow<ConnectionStatus>): OnConnectCallback {
-    override fun onConnect() {
-        Log.d("VM", "onConnect called")
-        connectionStatus.value = ConnectionStatus.Connected
-    }
-}
-
-class DisconnectCallback(private val connectionStatus: MutableStateFlow<ConnectionStatus>): OnDisconnectCallback {
-    override fun onDisconnect() {
-        Log.d("VM", "onDisconnect called")
-        connectionStatus.value = ConnectionStatus.Disconnected
     }
 }
