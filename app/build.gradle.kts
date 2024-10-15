@@ -44,6 +44,10 @@ android {
 dependencies {
     implementation(files("libs/android_lib_emulator.aar"))
 
+    implementation(libs.retrofit2.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
+
     // hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

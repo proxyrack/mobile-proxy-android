@@ -5,6 +5,7 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.proxyrack.control.data.repository.IpInfoRepository
 import com.proxyrack.control.domain.ConnectionStatus
 import com.proxyrack.control.domain.repository.SettingsRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,7 @@ import com.proxyrack.proxylib.android.OnDisconnectCallback
 import com.proxyrack.proxylib.android.Android.newManager
 
 @HiltViewModel
-class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo): ViewModel() {
+class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, private val ipInfoRepo: IpInfoRepository): ViewModel() {
     private val sharedPrefsName = "MyPreferences"
 
     private val _serverIP = MutableStateFlow("")
@@ -51,8 +52,18 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo):
         proxyManager = newManager(pid, "55", androidApiVersion, cpuArch)
 
         proxyManager.registerOnConnectCallback {
+            // todo: Get IP address and display in "Your Device IP" field
             _connectionStatus.value = ConnectionStatus.Connected
             Log.d("VM", "registerOnConnectCallback called")
+
+            ipInfoRepo.getIpInfo { info, error ->
+                if (info != null) {
+                    Log.d("VM", "IP: ${info.ip}")
+                    _deviceIP.value = info.ip
+                } else if (error != null) {
+                    Log.d("VM", error.toString())
+                }
+            }
         }
 
         proxyManager.registerOnDisconnectCallback {

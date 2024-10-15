@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.proxyrack.control.data.repository.DataAccessorImpl
+import com.proxyrack.control.data.repository.IpInfoRepository
 import com.proxyrack.control.data.repository.SettingsRepoImpl
 import com.proxyrack.control.domain.repository.DataAccessor
 import com.proxyrack.control.domain.repository.SettingsRepo
@@ -24,6 +25,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideIPInfoRepo(): IpInfoRepository {
+        return IpInfoRepository()
+    }
 
     @Provides
     @Singleton
