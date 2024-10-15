@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -173,10 +177,13 @@ class MainActivity : ComponentActivity() {
                                 ),
                                 )
                         }
-                        TitledColumn(
+
+                        val logMessages by viewModel.logMessages.collectAsState()
+                        LogsColumn(
                             title = "Logs",
+                            logMessages = logMessages,
                             modifier = Modifier.fillMaxSize()
-                        ) { }
+                        )
                     }
 
                 }
@@ -249,6 +256,53 @@ fun TitledColumn(
                 .padding(start = 5.dp, end = 5.dp)
         ) {
             Text(title)
+        }
+    }
+}
+
+@Composable
+fun LogsColumn(
+    title: String,
+    modifier: Modifier = Modifier,
+    logMessages: List<String>
+) {
+    Box(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 30.dp)
+    ) {
+
+        Box(
+            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp).border(
+                width = 2.dp,
+                color = Color.Black,
+                shape = RoundedCornerShape(5.dp)
+            )
+        ) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(0.dp),
+                modifier = modifier
+                    .padding(top = 20.dp)
+
+            ) {
+                itemsIndexed(logMessages) { index, msg ->
+                    //val topPadding = if (index == 0) 15.dp else 0.dp
+                    Text(msg, modifier = Modifier.padding(
+                        //top = topPadding,
+                        start = 10.dp,
+                        end = 10.dp))
+                }
+            }
+        }
+
+        Box(
+            // Having 2 calls to 'padding' looks a bit confusing.
+            // But remember that each modifier method call operates on the
+            // result of the previous call.
+            modifier = Modifier
+                .padding(start = 20.dp)
+                .background(Color.White)
+                .padding(start = 5.dp, end = 5.dp)
+        ) {
+            Text(title, modifier = Modifier.padding(vertical = 0.dp))
         }
     }
 }

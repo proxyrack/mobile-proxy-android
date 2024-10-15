@@ -1,6 +1,5 @@
 package com.proxyrack.control
 
-import android.content.Context
 import android.os.Build
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -15,9 +14,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.proxyrack.proxylib.android.Manager
-import com.proxyrack.proxylib.android.OnConnectCallback
-import com.proxyrack.proxylib.android.OnDisconnectCallback
 import com.proxyrack.proxylib.android.Android.newManager
+import kotlinx.coroutines.flow.update
+
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, private val ipInfoRepo: IpInfoRepository): ViewModel() {
@@ -34,6 +33,9 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, 
 
     private val _connectionStatus = MutableStateFlow(ConnectionStatus.Disconnected)
     val connectionStatus = _connectionStatus.asStateFlow()
+
+    private val _logMessages = MutableStateFlow<List<String>>(emptyList())
+    val logMessages = _logMessages.asStateFlow()
 
     private val proxyManager: Manager;
 
@@ -69,6 +71,12 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, 
         proxyManager.registerOnDisconnectCallback {
             _connectionStatus.value = ConnectionStatus.Disconnected
             Log.d("VM", "registerOnDisconnectCallback called")
+        }
+
+        proxyManager.registerOnLogEntryCallback { msg ->
+            _logMessages.update { currentMessages ->
+                currentMessages + msg.removeSuffix("\n")
+            }
         }
     }
 
