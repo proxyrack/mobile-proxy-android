@@ -126,7 +126,7 @@ class MainActivity : ComponentActivity() {
                                     "Your Device IP",
                                     value = viewModel.deviceIP,
                                     onValueChange = {
-                                        viewModel.updateDeviceIP(it)
+
                                     },
                                     enabled = false,
                                     modifier = Modifier.weight(1f).padding(start = 4.dp))

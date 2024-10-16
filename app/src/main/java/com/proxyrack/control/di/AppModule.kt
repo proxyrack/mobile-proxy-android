@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.proxyrack.control.data.repository.ConnectionRepo
 import com.proxyrack.control.data.repository.DataAccessorImpl
 import com.proxyrack.control.data.repository.IpInfoRepository
 import com.proxyrack.control.data.repository.SettingsRepoImpl
@@ -63,5 +64,11 @@ object AppModule {
     @Named("serverIP")
     fun provideServerIPAccessor(datastore: DataStore<Preferences>): DataAccessor {
         return DataAccessorImpl(datastore, "serverIP")
+    }
+
+    @Provides
+    @Singleton
+    fun provideConnectionRepo(): ConnectionRepo {
+        return ConnectionRepo()
     }
 }
