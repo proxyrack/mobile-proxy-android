@@ -340,6 +340,7 @@ fun StyledTextField(
         label = { Text(label) },
         colors = colors,
         enabled = enabled,
+        singleLine = true,
         keyboardOptions = keyboardOptions,
         keyboardActions = KeyboardActions(
             onDone = {
