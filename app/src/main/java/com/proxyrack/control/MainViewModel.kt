@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, private val ipInfoRepo: IpInfoRepository): ViewModel() {
-    private val sharedPrefsName = "MyPreferences"
 
     private val _serverIP = MutableStateFlow("")
     val serverIP = _serverIP.asStateFlow()
@@ -75,7 +74,7 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, 
 
         proxyManager.registerOnLogEntryCallback { msg ->
             _logMessages.update { currentMessages ->
-                currentMessages + msg.removeSuffix("\n")
+                currentMessages + msg.removeSuffix("\n").replaceFirstChar { it.uppercaseChar() }
             }
         }
     }

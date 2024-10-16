@@ -100,9 +100,6 @@ class MainActivity : ComponentActivity() {
                         Text(
                             "Mobile Proxy Control",
                             fontSize = 26.sp,
-                            modifier = Modifier.background(
-                                color = Color.White
-                            )
                         )
                         TitledColumn("Settings") {
                             Row(
@@ -252,7 +249,7 @@ fun TitledColumn(
             // result of the previous call.
             modifier = Modifier
                 .padding(start = 20.dp)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(start = 5.dp, end = 5.dp)
         ) {
             Text(title)
@@ -299,7 +296,7 @@ fun LogsColumn(
             // result of the previous call.
             modifier = Modifier
                 .padding(start = 20.dp)
-                .background(Color.White)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(start = 5.dp, end = 5.dp)
         ) {
             Text(title, modifier = Modifier.padding(vertical = 0.dp))
