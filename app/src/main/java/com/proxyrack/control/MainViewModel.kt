@@ -36,6 +36,9 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, 
     private val _logMessages = MutableStateFlow<List<String>>(emptyList())
     val logMessages = _logMessages.asStateFlow()
 
+    private val _showFormError = MutableStateFlow<Boolean>(false)
+    val showFormError = _showFormError.asStateFlow()
+
     private val proxyManager: Manager;
 
     init {
@@ -79,9 +82,24 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, 
         }
     }
 
+    fun updateShowFormError(show: Boolean) {
+        _showFormError.value = show
+    }
+
     fun updateServerIP(ip: String) {
         Log.d("sip", "updating server ip $ip")
         _serverIP.value = ip
+        maybeClearFormError()
+    }
+
+    private fun maybeClearFormError() {
+        Log.d("VM", "serverIP value: ${serverIP.value.isNotEmpty()}")
+        Log.d("VM", "deviceID value: ${deviceIP.value.isNotEmpty()}")
+        Log.d("VM", "showFormError value: ${showFormError.value}")
+        if (serverIP.value.isNotEmpty() && deviceID.value.isNotEmpty() && showFormError.value) {
+            updateShowFormError(false)
+            Log.d("VM", "cleared for error")
+        }
     }
 
     fun saveServerIP() {
@@ -96,6 +114,7 @@ class MainViewModel @Inject constructor(private val settingsRepo: SettingsRepo, 
 
     fun updateDeviceID(id: String) {
         _deviceID.value = id
+        maybeClearFormError()
     }
 
     fun saveDeviceID() {

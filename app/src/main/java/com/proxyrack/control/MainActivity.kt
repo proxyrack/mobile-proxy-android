@@ -149,8 +149,15 @@ class MainActivity : ComponentActivity() {
                             ConnectionStatus.Disconnected -> colorFromHex("#49de7d")
                         }
 
+                        val serverIP by viewModel.serverIP.collectAsState()
+                        val deviceID by viewModel.deviceID.collectAsState()
+
                         Button(
                             onClick = {
+                                if (serverIP.isEmpty() || deviceID.isEmpty()) {
+                                    viewModel.updateShowFormError(true)
+                                    return@Button
+                                }
                                 viewModel.connectionButtonClicked()
                             },
                             modifier = Modifier
@@ -173,6 +180,15 @@ class MainActivity : ComponentActivity() {
                                     fontSize = 19.sp
                                 ),
                                 )
+                        }
+
+                        val showFormError by viewModel.showFormError.collectAsState()
+                        if (showFormError) {
+                            Text(
+                                "Server IP and Device ID are required",
+                                color = Color.Red,
+                                modifier = Modifier.padding(top = 5.dp)
+                            )
                         }
 
                         val logMessages by viewModel.logMessages.collectAsState()
