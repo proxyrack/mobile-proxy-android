@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -55,6 +56,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -279,6 +281,17 @@ fun LogsColumn(
     modifier: Modifier = Modifier,
     logMessages: List<String>
 ) {
+    // Create a LazyListState to control the scroll position
+    val listState = rememberLazyListState()
+
+    // Launch a coroutine to scroll to the bottom whenever items change
+    LaunchedEffect(logMessages.size) {
+        // Scroll to the last item
+        if (logMessages.isNotEmpty()) {
+            listState.animateScrollToItem(logMessages.size - 1)
+        }
+    }
+
     Box(
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 30.dp)
     ) {
@@ -291,6 +304,7 @@ fun LogsColumn(
             )
         ) {
             LazyColumn(
+                state = listState,
                 verticalArrangement = Arrangement.spacedBy(0.dp),
                 modifier = modifier
                     .padding(top = 20.dp)
