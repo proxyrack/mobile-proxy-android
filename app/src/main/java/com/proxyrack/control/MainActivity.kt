@@ -2,11 +2,15 @@ package com.proxyrack.control
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -76,6 +80,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val TAG = "MainActivity"
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -230,6 +236,10 @@ class MainActivity : ComponentActivity() {
             } else {
                 // Permission is denied. Handle accordingly.
             }
+
+            // We want to request to ignore battery optimizations after requesting notifications
+            // permission regardless of whether the user clicked yes or no.
+            requestIgnoreBatteryOptimizations(this@MainActivity)
         }
 
         when {
@@ -238,6 +248,10 @@ class MainActivity : ComponentActivity() {
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED -> {
                 // Permission is already granted. Can show notification.
+
+                // We want to request to ignore battery optimizations regardless even
+                // if the user already granted notification permission on a previous app run.
+                requestIgnoreBatteryOptimizations(this@MainActivity)
             }
             else -> {
                 // Request the permission
@@ -245,6 +259,31 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    }
+
+    // Returns whether the app is already ignoring battery optimizations
+    @SuppressLint("BatteryLife")
+    fun requestIgnoreBatteryOptimizations(activity: Activity) {
+        // https://stackoverflow.com/a/33114136/6716264
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            // PowerManager.isIgnoringBatteryOptimizations is not available in api versions < 23
+            return
+        }
+
+        val pm : PowerManager = activity.getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (pm.isIgnoringBatteryOptimizations(activity.packageName)) {
+            Log.i(TAG, "Already ignoring battery optimizations")
+            return
+        }
+
+        val intent = Intent()
+        intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+        val uriString = "package:${activity.packageName}"
+        Log.d(TAG, "uri string: $uriString")
+        intent.data = Uri.parse(uriString)
+
+        activity.startActivity(intent)
     }
 }
 

@@ -1,0 +1,2 @@
+- Alarm to restart foreground service in case it's killed by OS (optional)
+- Button to copy proxy string (Not possible without other API)
