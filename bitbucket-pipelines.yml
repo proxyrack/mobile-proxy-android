@@ -1,10 +1,15 @@
-image: atlassian/default-image:latest
+image: docker:24.0.5 # Use a Docker-enabled image
 
 pipelines:
   default:
     - step:
-        name: Build Docker Image
+        name: Setup Docker
+        services:
+          - docker
+        caches:
+          - docker
         script:
+          - apk add --no-cache bash # Install bash if not already available
           - chmod +x build_docker_image.sh
           - ./build_docker_image.sh
     - step:
@@ -15,4 +20,8 @@ pipelines:
         artifacts:
           - app/build/outputs/debug/app-debug.apk
 
+definitions:
+  services:
+    docker:
+      image: docker:24.0.5-dind # Docker-in-Docker service
 
