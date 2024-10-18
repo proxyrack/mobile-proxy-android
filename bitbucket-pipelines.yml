@@ -4,8 +4,6 @@ pipelines:
   default:
     - step:
         name: Setup Docker
-        services:
-          - docker
         caches:
           - docker
         script:
