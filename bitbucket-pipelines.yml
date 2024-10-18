@@ -1,22 +1,21 @@
-image: docker:24.0.5 # Use a Docker-enabled image
+image: docker:24.0.5 # Use a Docker-enabled image for building the custom Docker image
 
 pipelines:
   default:
     - step:
-        name: Setup Docker
-        caches:
+        name: Build Docker Image
+        services:
           - docker
         script:
-          - apk add --no-cache bash # Install bash if not already available
-          - chmod +x build_docker_image.sh
-          - ./build_docker_image.sh
+          - docker build -t custom-android-builder .
     - step:
-        name: Build Debug APK
+        name: Build Android App
+        services:
+          - docker
         script:
-          - chmod +x build_debug.sh
-          - ./build_debug.sh
+          - docker run --rm -v $BITBUCKET_CLONE_DIR:/app custom-android-builder ./gradlew assembleDebug
         artifacts:
-          - app/build/outputs/debug/app-debug.apk
+          - app/build/outputs/**/*.apk
 
 definitions:
   services:
