@@ -1,0 +1,11 @@
+image: atlassian/default-image:latest
+
+pipelines:
+  default:
+    - step:
+        name: Build Debug APK
+        script:
+          - chmod +x build_debug.sh
+          - ./build_debug.sh
+        artifacts:
+          - app/build/outputs/debug/app-debug.apk
