@@ -4,8 +4,6 @@ pipelines:
   default:
     - step:
         name: Build Docker Image
-        caches:
-          - docker
         script:
           - chmod +x build_docker_image.sh
           - ./build_docker_image.sh
@@ -16,4 +14,5 @@ pipelines:
           - ./build_debug.sh
         artifacts:
           - app/build/outputs/debug/app-debug.apk
+
 
