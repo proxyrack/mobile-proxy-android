@@ -6,3 +6,12 @@ pipelines:
         - docker build --platform=linux/amd64 -t "proxy_control_builder" -f ./Dockerfile .
         services:
         - docker
+        artifacts:
+        - proxy_control_builder.docker
+
+    - step:
+    name: 'Test Run docker image'
+    script:
+    - docker load --input ./proxy_control_builder.docker
+    - docker images
+    - docker run -v ./:/app --rm --platform=linux/amd64 "proxy_control_builder" assembleDebug
