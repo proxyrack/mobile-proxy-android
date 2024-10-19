@@ -4,6 +4,7 @@ pipelines:
         name: 'Build docker image'
         script:
         - docker build --platform=linux/amd64 -t "proxy_control_builder" -f ./Dockerfile .
+        - docker save -output proxy_control_builder.docker proxy_control_builder
         services:
         - docker
         artifacts:
