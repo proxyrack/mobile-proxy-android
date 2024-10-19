@@ -1,18 +1,15 @@
+image: saschpe/android-ndk:35-jdk22.0.2_9-ndk27.0.12077973-cmake3.22.1
+
 pipelines:
   default:
     - step:
-        name: 'Build docker image'
+        name: Build Gradle Project
+        caches:
+          - gradle
         script:
-        - docker build --platform=linux/amd64 -t "proxy_control_builder" -f ./Dockerfile .
-        - docker save -output proxy_control_builder.docker proxy_control_builder
-        services:
-        - docker
-        artifacts:
-        - proxy_control_builder.docker
+          - export GRADLE_USER_HOME=`pwd`/.gradle
+          - ./gradlew clean build
 
-    - step:
-       name: 'Test Run docker image'
-       script:
-        - docker load --input ./proxy_control_builder.docker
-        - docker images
-        - docker run -v ./:/app --rm --platform=linux/amd64 "proxy_control_builder" assembleDebug
+definitions:
+  caches:
+    gradle: ~/.gradle
