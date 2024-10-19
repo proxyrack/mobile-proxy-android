@@ -10,8 +10,8 @@ pipelines:
         - proxy_control_builder.docker
 
     - step:
-    name: 'Test Run docker image'
-    script:
-    - docker load --input ./proxy_control_builder.docker
-    - docker images
-    - docker run -v ./:/app --rm --platform=linux/amd64 "proxy_control_builder" assembleDebug
+       name: 'Test Run docker image'
+       script:
+        - docker load --input ./proxy_control_builder.docker
+        - docker images
+        - docker run -v ./:/app --rm --platform=linux/amd64 "proxy_control_builder" assembleDebug
