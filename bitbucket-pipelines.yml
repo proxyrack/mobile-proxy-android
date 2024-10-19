@@ -1,24 +1,8 @@
-image: docker:24.0.5 # Use a Docker-enabled image for building the custom Docker image
-
 pipelines:
   default:
     - step:
-        name: Build Docker Image
-        services:
-          - docker
+        name: 'Build docker image'
         script:
-          - docker build -t custom-android-builder .
-    - step:
-        name: Build Android App
+        - docker build --platform=linux/amd64 -t "proxy_control_builder" -f ./Dockerfile .
         services:
-          - docker
-        script:
-          - docker run --rm -v $BITBUCKET_CLONE_DIR:/app custom-android-builder ./gradlew assembleDebug
-        artifacts:
-          - app/build/outputs/**/*.apk
-
-definitions:
-  services:
-    docker:
-      image: docker:24.0.5-dind # Docker-in-Docker service
-
+        - docker
