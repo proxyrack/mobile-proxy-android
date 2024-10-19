@@ -9,6 +9,8 @@ pipelines:
         script:
           - export GRADLE_USER_HOME=`pwd`/.gradle
           - ./gradlew clean build
+        artifacts:
+        - app/build/outputs/**/*.apk
 
 definitions:
   caches:
