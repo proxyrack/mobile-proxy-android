@@ -106,7 +106,7 @@ class ConnectionService : Service() {
         // there's a timeout after which an err is returned.
         serviceScope.launch {
             try {
-                proxyManager.connect("mobile-socket.culturegps.com", 443, connectionRepo.deviceID.value)
+                proxyManager.connect("mobile-socket.culturegps.com", 443, connectionRepo.deviceID.value, connectionRepo.username.value)
             } catch (e: Exception) {
                 Log.d("VM", "Failed to connect")
                 connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
