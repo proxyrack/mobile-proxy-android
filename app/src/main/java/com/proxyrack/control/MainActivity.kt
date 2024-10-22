@@ -127,8 +127,7 @@ class MainActivity : ComponentActivity() {
                                 onDone = {
                                     viewModel.saveUsername()
                                 },
-                                modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth(),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth()
                             )
                             StyledTextField(
                                 "Your Device ID",
