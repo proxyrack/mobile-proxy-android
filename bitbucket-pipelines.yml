@@ -4,6 +4,7 @@ pipelines:
   default:
     - step:
         name: Build Gradle Project
+        size: 2x
         caches:
           - gradle
         script:

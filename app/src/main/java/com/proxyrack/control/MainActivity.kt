@@ -66,11 +66,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.core.content.ContextCompat
@@ -112,12 +115,12 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize().padding(contentPadding),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        var keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current;
                         Text(
                             "Mobile Proxy Control",
                             fontSize = 26.sp,
                         )
                         TitledColumn("Settings") {
-                            // Server IP Field
                             StyledTextField(
                                 "Account Username",
                                 value = viewModel.username,
@@ -129,6 +132,7 @@ class MainActivity : ComponentActivity() {
                                 },
                                 modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth()
                             )
+
                             StyledTextField(
                                 "Your Device ID",
                                 value = viewModel.deviceID,
@@ -163,10 +167,21 @@ class MainActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
+                                // The user may click the connect button without first closing the
+                                // keyboard. Go ahead and close it for them if that's the case.
+                                keyboardController?.hide()
+
+                                // Validate form
                                 if (username.isEmpty() || deviceID.isEmpty()) {
                                     viewModel.updateShowFormError(true)
                                     return@Button
                                 }
+                                // The user may have clicked this button before closing the keyboard.
+                                // In that case, the buttons onDone handlers would not have been called.
+                                // So go ahead and save form values here as well.
+                                viewModel.saveDeviceID()
+                                viewModel.saveUsername()
+
                                 viewModel.connectionButtonClicked()
                             },
                             modifier = Modifier
