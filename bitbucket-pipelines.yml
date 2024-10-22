@@ -8,10 +8,13 @@ pipelines:
           - gradle
         script:
           - export GRADLE_USER_HOME=`pwd`/.gradle
+          - echo $KEYSTORE_BASE64 | base64 --decode > proxyRackMobileReleaseKey.jks
+          - export KEYSTORE_FILE_PATH=`pwd`/proxyRackMobileReleaseKey.jks
           - ./gradlew clean build
         artifacts:
-        - app/build/outputs/**/*.apk
+          - app/build/outputs/**/*.apk
 
 definitions:
   caches:
     gradle: ~/.gradle
+
