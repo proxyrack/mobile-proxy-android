@@ -37,9 +37,10 @@ object AppModule {
     @Singleton
     fun provideSettingsRepo(
         @Named("deviceID") deviceIDAccessor: DataAccessor,
-        @Named("serverIP") serverIPAccessor: DataAccessor,
+        @Named("username") usernameAccessor: DataAccessor,
+        @Named("initialized") initializedAccessor: DataAccessor,
     ): SettingsRepo {
-        return SettingsRepoImpl(deviceIDAccessor, serverIPAccessor)
+        return SettingsRepoImpl(deviceIDAccessor, usernameAccessor, initializedAccessor)
     }
 
     // https://stackoverflow.com/a/66603090/6716264
@@ -61,9 +62,16 @@ object AppModule {
 
     @Provides
     @Singleton
-    @Named("serverIP")
-    fun provideServerIPAccessor(datastore: DataStore<Preferences>): DataAccessor {
-        return DataAccessorImpl(datastore, "serverIP")
+    @Named("username")
+    fun provideUsernameAccessor(datastore: DataStore<Preferences>): DataAccessor {
+        return DataAccessorImpl(datastore, "username")
+    }
+
+    @Provides
+    @Singleton
+    @Named("initialized")
+    fun provideInitializedAccessor(datastore: DataStore<Preferences>): DataAccessor {
+        return DataAccessorImpl(datastore, "initialized")
     }
 
     @Provides

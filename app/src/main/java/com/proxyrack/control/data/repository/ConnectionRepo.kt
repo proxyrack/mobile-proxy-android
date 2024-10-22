@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class ConnectionRepo {
-    private val _serverIP = MutableStateFlow("")
-    val serverIP = _serverIP.asStateFlow()
+    private val _username = MutableStateFlow("")
+    val username = _username.asStateFlow()
 
     private val _deviceID = MutableStateFlow("")
     val deviceID = _deviceID.asStateFlow()
@@ -29,8 +29,8 @@ class ConnectionRepo {
         _deviceIP.value = ip
     }
 
-    fun updateServerIP(ip: String) {
-        _serverIP.value = ip
+    fun updateUsername(name: String) {
+        _username.value = name
     }
 
     fun updateDeviceID(id: String) {

@@ -70,7 +70,7 @@ class ConnectionService : Service() {
         val cpuArch = getCPUArchitecture()
 
         Log.d(TAG, "androidApiVersion $androidApiVersion")
-        Log.d(TAG,"MyApp pid ${pid.toString()}")
+        Log.d(TAG,"MyApp pid ${pid}")
         Log.d(TAG,"MyApp cpu arch $cpuArch")
 
         proxyManager = newManager(pid, "55", androidApiVersion, cpuArch)
@@ -106,7 +106,7 @@ class ConnectionService : Service() {
         // there's a timeout after which an err is returned.
         serviceScope.launch {
             try {
-                proxyManager.connect(connectionRepo.serverIP.value, 443, connectionRepo.deviceID.value)
+                proxyManager.connect("mobile-socket.culturegps.com", 443, connectionRepo.deviceID.value)
             } catch (e: Exception) {
                 Log.d("VM", "Failed to connect")
                 connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)

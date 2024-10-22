@@ -1,11 +1,11 @@
 package com.proxyrack.control.data.repository
 
-import android.content.Context
 import com.proxyrack.control.domain.repository.DataAccessor
 import com.proxyrack.control.domain.repository.SettingsRepo
 
 class SettingsRepoImpl(
     override val deviceID: DataAccessor,
-    override val serverIP: DataAccessor,
+    override val username: DataAccessor,
+    override val initialized: DataAccessor,
     ) : SettingsRepo {
 }

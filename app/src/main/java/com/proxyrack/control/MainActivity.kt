@@ -39,8 +39,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -117,33 +117,19 @@ class MainActivity : ComponentActivity() {
                             fontSize = 26.sp,
                         )
                         TitledColumn("Settings") {
-                            Row(
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(16.dp)
-                            ) {
-                                // Server IP Field
-                                StyledTextField(
-                                    "Server IP",
-                                    value = viewModel.serverIP,
-                                    onValueChange = {
-                                        viewModel.updateServerIP(it)
-                                    },
-                                    onDone = {
-                                        viewModel.saveServerIP()
-                                    },
-                                    modifier = Modifier.weight(1f).padding(end = 4.dp),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    )
-                                // Device IP Display Field
-                                StyledTextField(
-                                    "Your Device IP",
-                                    value = viewModel.deviceIP,
-                                    onValueChange = {
-
-                                    },
-                                    enabled = false,
-                                    modifier = Modifier.weight(1f).padding(start = 4.dp))
-                            }
+                            // Server IP Field
+                            StyledTextField(
+                                "Account Username",
+                                value = viewModel.username,
+                                onValueChange = {
+                                    viewModel.updateUsername(it)
+                                },
+                                onDone = {
+                                    viewModel.saveUsername()
+                                },
+                                modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth(),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            )
                             StyledTextField(
                                 "Your Device ID",
                                 value = viewModel.deviceID,
@@ -153,7 +139,16 @@ class MainActivity : ComponentActivity() {
                                 onDone = {
                                     viewModel.saveDeviceID()
                                 },
-                                modifier = Modifier.padding(start = 16.dp, end = 16.dp).fillMaxWidth())
+                                modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
+                            // Device IP Display Field
+                            StyledTextField(
+                                "Your Device IP",
+                                value = viewModel.deviceIP,
+                                onValueChange = {
+
+                                },
+                                enabled = false,
+                                modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
                             SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
                         }
                         val connectionStatus by viewModel.connectionStatus.collectAsState()
@@ -164,12 +159,12 @@ class MainActivity : ComponentActivity() {
                             ConnectionStatus.Disconnected -> colorFromHex("#49de7d")
                         }
 
-                        val serverIP by viewModel.serverIP.collectAsState()
+                        val username by viewModel.username.collectAsState()
                         val deviceID by viewModel.deviceID.collectAsState()
 
                         Button(
                             onClick = {
-                                if (serverIP.isEmpty() || deviceID.isEmpty()) {
+                                if (username.isEmpty() || deviceID.isEmpty()) {
                                     viewModel.updateShowFormError(true)
                                     return@Button
                                 }
@@ -200,7 +195,7 @@ class MainActivity : ComponentActivity() {
                         val showFormError by viewModel.showFormError.collectAsState()
                         if (showFormError) {
                             Text(
-                                "Server IP and Device ID are required",
+                                "Username and Device ID are required",
                                 color = Color.Red,
                                 modifier = Modifier.padding(top = 5.dp)
                             )
@@ -293,7 +288,7 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     val annotatedString = buildAnnotatedString {
-        pushStringAnnotation(tag = "link", annotation = "https://google.com")
+        pushStringAnnotation(tag = "link", annotation = "https://proxyrack.com/mobile-proxies/")
         withStyle(
             // It seems the underline style is being overridden somehow.
             // When the app is opened in the emulator, the underline is visible for a split second.
@@ -427,11 +422,10 @@ fun StyledTextField(
 
     // Set colors so that even if a text field is disabled, it will
     // have the same colors as an enabled text field.
-    var colors = OutlinedTextFieldDefaults.colors()
+    var colors = TextFieldDefaults.colors()
     if (!enabled) {
-        colors = OutlinedTextFieldDefaults.colors(
+        colors = TextFieldDefaults.colors(
             disabledTextColor = colors.unfocusedTextColor,
-            disabledBorderColor = colors.unfocusedIndicatorColor,
             disabledLabelColor = colors.unfocusedLabelColor,
         )
     }
@@ -443,7 +437,7 @@ fun StyledTextField(
 
     val textValue by value.collectAsState()
 
-    OutlinedTextField(
+    TextField(
         modifier = modifier.focusRequester(focusRequester),
         onValueChange = onValueChange,
         value = textValue,
