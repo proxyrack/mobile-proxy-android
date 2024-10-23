@@ -66,8 +66,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -116,37 +118,101 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         var keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current;
+                        val connectionStatus by viewModel.connectionStatus.collectAsState()
+
+                        var username = rememberSaveable { mutableStateOf("") }
+                        var deviceID = rememberSaveable { mutableStateOf("") }
+
+                        // This will only run once. Loads the previously saved values into the form.
+                        LaunchedEffect(Unit) {
+                            viewModel.initialFormValues.collect { values ->
+                                if (values != null) {
+                                    username.value = values.username
+                                    deviceID.value = values.deviceID
+                                    return@collect
+                                }
+                            }
+                        }
+
+                        var usernameErrMsg = rememberSaveable { mutableStateOf("") }
+                        var usernameFieldDirty = rememberSaveable { mutableStateOf(false) } // whether field has been submitted at least once
+
+                        var deviceIdErrMsg = rememberSaveable { mutableStateOf("") }
+                        var deviceIdFieldDirty = rememberSaveable { mutableStateOf(false) } // whether field has been submitted at least once
+
                         Text(
                             "Mobile Proxy Control",
                             fontSize = 26.sp,
                         )
+
+                        fun runValidation(fieldText: MutableState<String>, fieldDirty: MutableState<Boolean>, errMsg: MutableState<String>, validator: (String) -> ValidationResult): Boolean {
+                            Log.d("MA", "running field validation")
+
+                            val result = validator(fieldText.value)
+
+                            if (fieldDirty.value && !result.isValid) {
+                                errMsg.value = result.errMsg
+                            } else {
+                                errMsg.value = ""
+                            }
+
+                            return result.isValid
+                        }
+                        fun runUsernameValidation(): Boolean {
+                            return runValidation(username, usernameFieldDirty, usernameErrMsg, ::usernameValidator)
+                        }
+                        fun runDeviceIdValidation(): Boolean {
+                            return runValidation(deviceID, deviceIdFieldDirty, deviceIdErrMsg, ::deviceIdValidator)
+                        }
                         TitledColumn("Settings") {
                             StyledTextField(
                                 "Account Username",
-                                value = viewModel.username,
+                                value = username.value,
                                 onValueChange = {
-                                    viewModel.updateUsername(it)
+                                    username.value = it
+                                    runUsernameValidation()
                                 },
                                 onDone = {
-                                    viewModel.saveUsername()
+                                    usernameFieldDirty.value = true
+                                    runUsernameValidation()
                                 },
-                                modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth()
+                                enabled = connectionStatus == ConnectionStatus.Disconnected,
+                                isError = usernameErrMsg.value.isNotEmpty(),
+                                modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth(),
                             )
-
+                            if (usernameErrMsg.value.isNotEmpty()) {
+                                Text(
+                                    usernameErrMsg.value,
+                                    color = Color.Red,
+                                    modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                                    )
+                            }
                             StyledTextField(
                                 "Your Device ID",
-                                value = viewModel.deviceID,
+                                value = deviceID.value,
                                 onValueChange = {
-                                    viewModel.updateDeviceID(it)
+                                    deviceID.value = it
+                                    runDeviceIdValidation()
                                 },
                                 onDone = {
-                                    viewModel.saveDeviceID()
+                                    deviceIdFieldDirty.value = true
+                                    runDeviceIdValidation()
                                 },
+                                enabled = connectionStatus == ConnectionStatus.Disconnected,
+                                isError = deviceIdErrMsg.value.isNotEmpty(),
                                 modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
+                            if (deviceIdErrMsg.value.isNotEmpty()) {
+                                Text(
+                                    deviceIdErrMsg.value,
+                                    color = Color.Red,
+                                    modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                                )
+                            }
+                            val deviceIP = viewModel.deviceIP.collectAsState()
                             // Device IP Display Field
                             StyledTextField(
                                 "Your Device IP",
-                                value = viewModel.deviceIP,
+                                value = deviceIP.value,
                                 onValueChange = {
 
                                 },
@@ -154,7 +220,6 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
                             SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
                         }
-                        val connectionStatus by viewModel.connectionStatus.collectAsState()
 
                         val buttonColor = when (connectionStatus) {
                             ConnectionStatus.Connecting -> colorFromHex("#49de7d")
@@ -162,25 +227,21 @@ class MainActivity : ComponentActivity() {
                             ConnectionStatus.Disconnected -> colorFromHex("#49de7d")
                         }
 
-                        val username by viewModel.username.collectAsState()
-                        val deviceID by viewModel.deviceID.collectAsState()
-
                         Button(
                             onClick = {
                                 // The user may click the connect button without first closing the
                                 // keyboard. Go ahead and close it for them if that's the case.
                                 keyboardController?.hide()
 
-                                // Validate form
-                                if (username.isEmpty() || deviceID.isEmpty()) {
-                                    viewModel.updateShowFormError(true)
+                                usernameFieldDirty.value = true
+                                deviceIdFieldDirty.value = true
+                                val formValid = runUsernameValidation() && runDeviceIdValidation()
+                                if (!formValid) {
                                     return@Button
                                 }
-                                // The user may have clicked this button before closing the keyboard.
-                                // In that case, the buttons onDone handlers would not have been called.
-                                // So go ahead and save form values here as well.
-                                viewModel.saveDeviceID()
-                                viewModel.saveUsername()
+
+                                viewModel.saveUsername(username.value)
+                                viewModel.saveDeviceID(deviceID.value)
 
                                 viewModel.connectionButtonClicked()
                             },
@@ -204,15 +265,6 @@ class MainActivity : ComponentActivity() {
                                     fontSize = 19.sp
                                 ),
                                 )
-                        }
-
-                        val showFormError by viewModel.showFormError.collectAsState()
-                        if (showFormError) {
-                            Text(
-                                "Username and Device ID are required",
-                                color = Color.Red,
-                                modifier = Modifier.padding(top = 5.dp)
-                            )
                         }
 
                         val logMessages by viewModel.logMessages.collectAsState()
@@ -426,11 +478,12 @@ fun LogsColumn(
 @Composable
 fun StyledTextField(
     label: String,
-    value: StateFlow<String>,
+    value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     onDone: () -> Unit = {}, // should be a function that saves the value to store
     enabled: Boolean = true,
+    isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
                     ) {
 
@@ -449,16 +502,15 @@ fun StyledTextField(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    val textValue by value.collectAsState()
-
     TextField(
         modifier = modifier.focusRequester(focusRequester),
         onValueChange = onValueChange,
-        value = textValue,
+        value = value,
         label = { Text(label) },
         colors = colors,
         enabled = enabled,
         singleLine = true,
+        isError = isError,
         keyboardOptions = keyboardOptions,
         keyboardActions = KeyboardActions(
             onDone = {
@@ -468,6 +520,34 @@ fun StyledTextField(
             }
         )
     )
+}
+
+data class ValidationResult(val isValid: Boolean, val errMsg: String)
+
+val usernameRegex = "^[a-zA-Z0-9]{4,15}$".toRegex()
+
+fun usernameValidator(text: String): ValidationResult {
+    val valid = usernameRegex.matches(text)
+
+    var errMsg = ""
+    if (!valid) {
+        errMsg = "Username must be 4-15 characters long with no special characters"
+    }
+
+    return ValidationResult(valid, errMsg)
+}
+
+val deviceIdRegex = "^[a-zA-Z0-9-]{4,40}$".toRegex()
+
+fun deviceIdValidator(text: String): ValidationResult {
+    val valid = deviceIdRegex.matches(text)
+
+    var errMsg = ""
+    if (!valid) {
+        errMsg = "Device ID must be 4-40 characters long with no special characters other than dashes"
+    }
+
+    return ValidationResult(valid, errMsg)
 }
 
 fun colorFromHex(hex: String): Color {

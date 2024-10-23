@@ -2,7 +2,6 @@ package com.proxyrack.control
 
 import android.app.Application
 import android.content.Intent
-import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,12 +23,6 @@ class MainViewModel @Inject constructor(
     private val settingsRepo: SettingsRepo,
     private val connectionRepo: ConnectionRepo): AndroidViewModel(application) {
 
-    val username: StateFlow<String>
-        get() = connectionRepo.username
-
-    val deviceID: StateFlow<String>
-        get() = connectionRepo.deviceID
-
     val deviceIP: StateFlow<String>
         get() = connectionRepo.deviceIP
 
@@ -39,59 +32,41 @@ class MainViewModel @Inject constructor(
     val logMessages: StateFlow<List<String>>
         get() = connectionRepo.logMessages
 
-    private val _showFormError = MutableStateFlow<Boolean>(false)
-    val showFormError = _showFormError.asStateFlow()
+    private val _initialFormValues: MutableStateFlow<InitialFormValues?> = MutableStateFlow(null)
+    val initialFormValues = _initialFormValues.asStateFlow()
 
     init {
         viewModelScope.launch {
-            connectionRepo.updateUsername(settingsRepo.username.get())
-            connectionRepo.updateDeviceID(settingsRepo.deviceID.get())
+            val savedUsername = settingsRepo.username.get()
+            var savedDeviceID = settingsRepo.deviceID.get()
+
+            connectionRepo.updateUsername(savedUsername)
+            connectionRepo.updateDeviceID(savedDeviceID)
 
             // If this is the first time the app has been run, generate a random device ID
             val previouslyInitialized = settingsRepo.initialized.get().isNotEmpty()
             if (!previouslyInitialized) {
                 settingsRepo.initialized.set("true")
-                val uuid = UUID.randomUUID().toString()
-                connectionRepo.updateDeviceID(uuid)
-                settingsRepo.deviceID.set(uuid)
+                savedDeviceID = UUID.randomUUID().toString()
+                connectionRepo.updateDeviceID(savedDeviceID)
+                settingsRepo.deviceID.set(savedDeviceID)
             }
+
+            _initialFormValues.value = InitialFormValues(savedUsername, savedDeviceID)
         }
     }
 
-    fun updateShowFormError(show: Boolean) {
-        _showFormError.value = show
-    }
-
-    fun updateUsername(ip: String) {
-        Log.d("sip", "updating server ip $ip")
-        connectionRepo.updateUsername(ip)
-        maybeClearFormError()
-    }
-
-    private fun maybeClearFormError() {
-        Log.d("VM", "username value: ${username.value.isNotEmpty()}")
-        Log.d("VM", "deviceID value: ${deviceIP.value.isNotEmpty()}")
-        Log.d("VM", "showFormError value: ${showFormError.value}")
-        if (username.value.isNotEmpty() && deviceID.value.isNotEmpty() && showFormError.value) {
-            updateShowFormError(false)
-            Log.d("VM", "cleared for error")
-        }
-    }
-
-    fun saveUsername() {
+    fun saveUsername(username: String) {
+        connectionRepo.updateUsername(username)
         viewModelScope.launch {
-            settingsRepo.username.set(username.value)
+            settingsRepo.username.set(username)
         }
     }
 
-    fun updateDeviceID(id: String) {
+    fun saveDeviceID(id: String) {
         connectionRepo.updateDeviceID(id)
-        maybeClearFormError()
-    }
-
-    fun saveDeviceID() {
         viewModelScope.launch {
-            settingsRepo.deviceID.set(deviceID.value)
+            settingsRepo.deviceID.set(id)
         }
     }
 
@@ -119,3 +94,5 @@ class MainViewModel @Inject constructor(
     }
 
 }
+
+data class InitialFormValues(val username: String, val deviceID: String)
