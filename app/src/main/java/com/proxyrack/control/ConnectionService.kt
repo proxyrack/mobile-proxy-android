@@ -105,7 +105,20 @@ class ConnectionService : Service() {
             if (!disconnectRequestedByUser.get()) {
                 // We were involuntarily disconnected for some reason. Perhaps an error occurred.
                 // Try to reconnect
-                connect()
+                serviceScope.launch {
+                    // Wait 5 seconds so that we don't end up with an infinite tight loop
+                    connectionRepo.addLogMessage("Will attempt to reconnect in 5 seconds")
+                    delay(5000L)
+
+                    val connectionStatus = connectionRepo.connectionStatus.value
+                    if (connectionStatus != ConnectionStatus.Disconnected) {
+                        // The user manually reconnected before we could perform auto reconnect
+                        return@launch
+                    }
+
+                    connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
+                    connect()
+                }
             }
         }
 
