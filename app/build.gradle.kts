@@ -31,12 +31,18 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
             signingConfig = signingConfigs.getByName("release")
+            buildConfigField("String", "SERVER_IP", "\"mobile-socket.culturegps.com\"")
+        }
+        debug {
+            //applicationIdSuffix = ".debug"
+            isDebuggable = true
+            buildConfigField("String", "SERVER_IP", "\"95.216.229.111\"")
         }
     }
     compileOptions {
@@ -48,6 +54,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
