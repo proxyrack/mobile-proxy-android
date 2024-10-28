@@ -18,8 +18,11 @@ import com.proxyrack.proxylib.android.Manager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import java.util.concurrent.atomic.AtomicBoolean
+
 
 @AndroidEntryPoint
 class ConnectionService : Service() {
@@ -37,6 +40,11 @@ class ConnectionService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
     private lateinit var proxyManager: Manager;
+
+    // If a disconnect happens and it was the result of an error or temporary
+    // loss of internet connection, and not at the request of the user,
+    // we will attempt to automatically reconnect.
+    private var disconnectRequestedByUser = AtomicBoolean(false);
 
     override fun onCreate() {
         super.onCreate()
@@ -93,6 +101,12 @@ class ConnectionService : Service() {
         proxyManager.registerOnDisconnectCallback {
             connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
             Log.d(TAG, "registerOnDisconnectCallback called")
+
+            if (!disconnectRequestedByUser.get()) {
+                // We were involuntarily disconnected for some reason. Perhaps an error occurred.
+                // Try to reconnect
+                connect()
+            }
         }
 
         proxyManager.registerOnLogEntryCallback { msg ->
@@ -106,7 +120,7 @@ class ConnectionService : Service() {
         // there's a timeout after which an err is returned.
         serviceScope.launch {
             try {
-                proxyManager.connect("mobile-socket.culturegps.com", 443, connectionRepo.deviceID.value, connectionRepo.username.value)
+                proxyManager.connect(BuildConfig.SERVER_IP, 443, connectionRepo.deviceID.value, connectionRepo.username.value)
             } catch (e: Exception) {
                 Log.d("VM", "Failed to connect")
                 connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
@@ -140,6 +154,7 @@ class ConnectionService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("connection service", "onDestroy called")
+        disconnectRequestedByUser.set(true)
         disconnect()
     }
 
