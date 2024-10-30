@@ -7,5 +7,6 @@ class SettingsRepoImpl(
     override val deviceID: DataAccessor,
     override val username: DataAccessor,
     override val initialized: DataAccessor,
+    override val analyticsEnabled: DataAccessor,
     ) : SettingsRepo {
 }

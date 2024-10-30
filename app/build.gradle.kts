@@ -60,21 +60,18 @@ android {
 
 dependencies {
     implementation(files("libs/android_lib_emulator.aar"))
-
+    implementation(libs.posthog.android)
     implementation(libs.retrofit2.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.logging.interceptor)
-
-    // hilt
     implementation(libs.hilt.android)
+    implementation(libs.androidx.hilt.navigation.compose)
     kapt(libs.hilt.compiler)
-    // For instrumentation tests
-    androidTestImplementation(libs.hilt.android.testing)
+    androidTestImplementation(libs.hilt.android.testing) // For instrumentation tests
     kaptAndroidTest(libs.hilt.compiler)
-    // For local unit tests
-    testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.hilt.android.testing) // For local unit tests
     kaptTest(libs.hilt.compiler)
-
+    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

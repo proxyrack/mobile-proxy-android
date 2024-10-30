@@ -1,11 +1,11 @@
 package com.proxyrack.control.di
 
-import android.app.Application
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.proxyrack.control.data.repository.AnalyticsStatusNotifier
 import com.proxyrack.control.data.repository.ConnectionRepo
 import com.proxyrack.control.data.repository.DataAccessorImpl
 import com.proxyrack.control.data.repository.IpInfoRepository
@@ -39,8 +39,15 @@ object AppModule {
         @Named("deviceID") deviceIDAccessor: DataAccessor,
         @Named("username") usernameAccessor: DataAccessor,
         @Named("initialized") initializedAccessor: DataAccessor,
+        @Named("analytics") analyticsAccessor: DataAccessor,
     ): SettingsRepo {
-        return SettingsRepoImpl(deviceIDAccessor, usernameAccessor, initializedAccessor)
+        return SettingsRepoImpl(deviceIDAccessor, usernameAccessor, initializedAccessor, analyticsAccessor)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsStatusNotifier(): AnalyticsStatusNotifier {
+        return AnalyticsStatusNotifier()
     }
 
     // https://stackoverflow.com/a/66603090/6716264
@@ -72,6 +79,13 @@ object AppModule {
     @Named("initialized")
     fun provideInitializedAccessor(datastore: DataStore<Preferences>): DataAccessor {
         return DataAccessorImpl(datastore, "initialized")
+    }
+
+    @Provides
+    @Singleton
+    @Named("analytics")
+    fun provideAnalyticsAccessor(datastore: DataStore<Preferences>): DataAccessor {
+        return DataAccessorImpl(datastore, "analytics")
     }
 
     @Provides

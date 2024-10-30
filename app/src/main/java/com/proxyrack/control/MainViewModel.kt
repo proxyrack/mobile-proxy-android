@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.UUID
 import javax.inject.Inject
 
 
@@ -35,39 +34,31 @@ class MainViewModel @Inject constructor(
     private val _initialFormValues: MutableStateFlow<InitialFormValues?> = MutableStateFlow(null)
     val initialFormValues = _initialFormValues.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            val savedUsername = settingsRepo.username.get()
-            var savedDeviceID = settingsRepo.deviceID.get()
-
-            connectionRepo.updateUsername(savedUsername)
-            connectionRepo.updateDeviceID(savedDeviceID)
-
-            // If this is the first time the app has been run, generate a random device ID
-            val previouslyInitialized = settingsRepo.initialized.get().isNotEmpty()
-            if (!previouslyInitialized) {
-                settingsRepo.initialized.set("true")
-                savedDeviceID = UUID.randomUUID().toString()
-                connectionRepo.updateDeviceID(savedDeviceID)
-                settingsRepo.deviceID.set(savedDeviceID)
-            }
-
-            _initialFormValues.value = InitialFormValues(savedUsername, savedDeviceID)
-        }
+    suspend fun previouslyInitialized(): Boolean {
+        return settingsRepo.initialized.get().isNotEmpty()
     }
 
-    fun saveUsername(username: String) {
+    suspend fun setPreviouslyInitialized() {
+        settingsRepo.initialized.set("true")
+    }
+
+    // To be called when main activity has finished its initialization tasks
+    suspend fun initializationTasksFinished() {
+        val savedUsername = settingsRepo.username.get()
+        var savedDeviceID = settingsRepo.deviceID.get()
+        connectionRepo.updateUsername(savedUsername)
+        connectionRepo.updateDeviceID(savedDeviceID)
+        _initialFormValues.value = InitialFormValues(savedUsername, savedDeviceID)
+    }
+
+    suspend fun saveUsername(username: String) {
         connectionRepo.updateUsername(username)
-        viewModelScope.launch {
-            settingsRepo.username.set(username)
-        }
+        settingsRepo.username.set(username)
     }
 
-    fun saveDeviceID(id: String) {
+    suspend fun saveDeviceID(id: String) {
         connectionRepo.updateDeviceID(id)
-        viewModelScope.launch {
-            settingsRepo.deviceID.set(id)
-        }
+        settingsRepo.deviceID.set(id)
     }
 
     fun connectionButtonClicked() {
