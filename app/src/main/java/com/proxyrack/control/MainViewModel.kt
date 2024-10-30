@@ -2,17 +2,14 @@ package com.proxyrack.control
 
 import android.app.Application
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import com.proxyrack.control.data.repository.ConnectionRepo
 import com.proxyrack.control.domain.ConnectionStatus
 import com.proxyrack.control.domain.repository.SettingsRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -22,6 +19,12 @@ class MainViewModel @Inject constructor(
     private val settingsRepo: SettingsRepo,
     private val connectionRepo: ConnectionRepo): AndroidViewModel(application) {
 
+    val username: StateFlow<String>
+        get() = connectionRepo.username
+
+    val deviceID: StateFlow<String>
+        get() = connectionRepo.deviceID
+
     val deviceIP: StateFlow<String>
         get() = connectionRepo.deviceIP
 
@@ -30,9 +33,6 @@ class MainViewModel @Inject constructor(
 
     val logMessages: StateFlow<List<String>>
         get() = connectionRepo.logMessages
-
-    private val _initialFormValues: MutableStateFlow<InitialFormValues?> = MutableStateFlow(null)
-    val initialFormValues = _initialFormValues.asStateFlow()
 
     suspend fun previouslyInitialized(): Boolean {
         return settingsRepo.initialized.get().isNotEmpty()
@@ -44,11 +44,12 @@ class MainViewModel @Inject constructor(
 
     // To be called when main activity has finished its initialization tasks
     suspend fun initializationTasksFinished() {
+        Log.d(javaClass.simpleName, "initializationTasksFinished")
         val savedUsername = settingsRepo.username.get()
         var savedDeviceID = settingsRepo.deviceID.get()
+        Log.d(javaClass.simpleName, "saved username: $savedUsername saved deviceID: $savedDeviceID")
         connectionRepo.updateUsername(savedUsername)
         connectionRepo.updateDeviceID(savedDeviceID)
-        _initialFormValues.value = InitialFormValues(savedUsername, savedDeviceID)
     }
 
     suspend fun saveUsername(username: String) {
@@ -86,4 +87,3 @@ class MainViewModel @Inject constructor(
 
 }
 
-data class InitialFormValues(val username: String, val deviceID: String)
