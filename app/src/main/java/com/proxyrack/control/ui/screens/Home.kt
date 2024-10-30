@@ -71,13 +71,21 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
         var username = rememberSaveable { mutableStateOf("") }
         var deviceID = rememberSaveable { mutableStateOf("") }
 
-        // This will only run once. Loads the previously saved values into the form.
+        // Loads the previously saved values into the form.
         LaunchedEffect(Unit) {
-            viewModel.initialFormValues.collect { values ->
-                Log.d("HomeScreen", "values received. device ID: ${values?.deviceID}")
-                if (values != null) {
-                    username.value = values.username
-                    deviceID.value = values.deviceID
+            viewModel.username.collect { value ->
+                Log.d("HOME", "username value: $value")
+                if (value.isNotEmpty()) {
+                    username.value = value
+                    return@collect
+                }
+            }
+        }
+        LaunchedEffect(Unit) {
+            viewModel.deviceID.collect { value ->
+                Log.d("HOME", "dID value: $value")
+                if (value.isNotEmpty()) {
+                    deviceID.value = value
                     return@collect
                 }
             }
