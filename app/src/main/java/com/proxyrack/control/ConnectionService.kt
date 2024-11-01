@@ -168,13 +168,7 @@ class ConnectionService : Service() {
         super.onDestroy()
         Log.d("connection service", "onDestroy called")
         disconnectRequestedByUser.set(true)
-        disconnect()
-    }
-
-    private fun disconnect() {
-        serviceScope.launch {
-            proxyManager.disconnect()
-        }
+        proxyManager.disconnect()
     }
 
     private fun createNotificationChannel() {
