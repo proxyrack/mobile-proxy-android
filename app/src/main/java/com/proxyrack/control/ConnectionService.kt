@@ -59,7 +59,7 @@ class ConnectionService : Service() {
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Proxy Control")
-            .setContentText("Connected to server")
+            .setContentText("Proxy service running")
             .setSmallIcon(R.drawable.logo)
             .setContentIntent(pendingIntent)
             .build()
