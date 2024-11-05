@@ -67,6 +67,10 @@ jobs:
         with:
           node-version: "lts/*"
 
+      - name: Install semantic-release and plugins
+        run: |
+          npm install semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git @semantic-release/github
+
       - name: Download APK
         uses: actions/download-artifact@v3
         with:
