@@ -49,6 +49,7 @@ jobs:
           path: app/build/outputs/**/*.apk
 
       - name: Set Short SHA
+        shell: bash
         run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
 
       - name: Create Release
