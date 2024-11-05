@@ -62,6 +62,7 @@ jobs:
           release_name: Release v-${{ env.SHORT_SHA }}
           draft: false
           prerelease: false
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
 
       - name: Upload APKs to Release
         uses: actions/upload-release-asset@v1
@@ -72,3 +73,4 @@ jobs:
           asset_path: app/build/outputs/apk/release/app-release.apk
           asset_name: proxy_control.apk
           asset_content_type: application/vnd.android.package-archive
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/master')
