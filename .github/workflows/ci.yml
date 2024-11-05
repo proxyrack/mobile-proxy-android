@@ -48,14 +48,18 @@ jobs:
           name: APKs
           path: app/build/outputs/**/*.apk
 
+      - name: Set Short SHA
+        shell: bash
+        run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.sha }}
-          release_name: Release ${{ github.sha }}
+          tag_name: v-${{ env.SHORT_SHA }}
+          release_name: Release v-${{ env.SHORT_SHA }}
           draft: false
           prerelease: false
 
