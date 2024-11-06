@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: APKs
-          path: app/build/outputs/**/*.apk
+          path: app/build/outputs/apk/release/app-release.apk
 
   release:
     runs-on: ubuntu-latest
