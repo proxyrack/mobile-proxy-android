@@ -67,7 +67,8 @@ class MainViewModel @Inject constructor(
             ConnectionStatus.Connecting -> return
             ConnectionStatus.Connected -> disconnect()
             ConnectionStatus.Disconnected -> {
-                connectionRepo.updateConnectionStatus(ConnectionStatus.Connected)
+                connectionRepo.addLogMessage("Connecting...")
+                connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
                 connect()
             }
         }

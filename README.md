@@ -1,4 +1,4 @@
-# Proxyrack Mobile Proxy Client
+## Proxyrack Mobile Proxy Client
 
 **Proxyrack Mobile Proxy Client** is a free and powerful solution for creating and managing mobile proxies directly from your mobile devices. Similar to **Proxidize** and **iProxy**, this app allows you to turn your device into a mobile proxy with minimal setup, offering both HTTP and SOCKS protocols for secure, reliable connections. With a user-friendly web dashboard, you can monitor and manage all connected devices with ease.
 
@@ -19,8 +19,8 @@
 2. Download the precompiled APK from the [releases page](https://github.com/proxyrack/mobile-proxy-android/releases)
 or build it yourself using the instructions below.
 ## How to build
-1. Run the script 'build_docker_image.sh'
-2. Run the script 'build_debug.sh'. The apk will be output to the path ./app/build/outputs/debug/app-debug.apk
+1. Run the script 'build.sh'
+2. The generated apk will be in the path ./app/build/outputs/apk/release/app-release.apk
 
 The build takes 10 or 15 min on an m1 mac. It builds much faster when not dockerized (30 seconds). That's something to look into.
 
@@ -36,5 +36,3 @@ The build takes 10 or 15 min on an m1 mac. It builds much faster when not docker
 ---
 
 For more information, check out https://www.proxyrack.com/mobile-proxies/ or contact us at [support@proxyrack.com](mailto:support@proxyrack.com).
-
-

@@ -59,7 +59,7 @@ class ConnectionService : Service() {
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Proxy Control")
-            .setContentText("Connected to server")
+            .setContentText("Proxy service running")
             .setSmallIcon(R.drawable.logo)
             .setContentIntent(pendingIntent)
             .build()
@@ -168,13 +168,7 @@ class ConnectionService : Service() {
         super.onDestroy()
         Log.d("connection service", "onDestroy called")
         disconnectRequestedByUser.set(true)
-        disconnect()
-    }
-
-    private fun disconnect() {
-        serviceScope.launch {
-            proxyManager.disconnect()
-        }
+        proxyManager.disconnect()
     }
 
     private fun createNotificationChannel() {
