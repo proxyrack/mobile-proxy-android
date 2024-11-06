@@ -7,7 +7,7 @@
       "@semantic-release/github",
       {
         "assets": [
-          {"path": "app/build/outputs/apk/release/app-release.apk", "label": "Release APK"}
+          {"path": "app/build/outputs/apk/release/app-release.apk", "label": "Proxy Control APK"}
         ]
       }
     ]
