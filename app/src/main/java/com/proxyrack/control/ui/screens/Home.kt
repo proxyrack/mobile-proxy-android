@@ -74,6 +74,8 @@ import com.proxyrack.control.domain.ConnectionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+var purple = Color(0xff4A28C6)
+
 @Composable
 fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val coroutineScope = rememberCoroutineScope()
@@ -140,9 +142,14 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
         // Main Content
         Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(20.dp).fillMaxSize(),
+            //horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(
+                "Mobile Proxy Control",
+                fontSize = 20.sp,
+                color = purple,
+            )
 
             var keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current;
             val connectionStatus by viewModel.connectionStatus.collectAsState()
@@ -176,11 +183,6 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             var deviceIdErrMsg = rememberSaveable { mutableStateOf("") }
             var deviceIdFieldDirty = rememberSaveable { mutableStateOf(false) } // whether field has been submitted at least once
 
-//        Text(
-//            "Mobile Proxy Control",
-//            fontSize = 26.sp,
-//        )
-
             fun runValidation(fieldText: MutableState<String>, fieldDirty: MutableState<Boolean>, errMsg: MutableState<String>, validator: (String) -> ValidationResult): Boolean {
                 Log.d("MA", "running field validation")
 
@@ -200,67 +202,88 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             fun runDeviceIdValidation(): Boolean {
                 return runValidation(deviceID, deviceIdFieldDirty, deviceIdErrMsg, ::deviceIdValidator)
             }
-            TitledColumn("Settings") {
-                StyledTextField(
-                    "Account Username",
-                    value = username.value,
-                    onValueChange = {
-                        username.value = it
-                        runUsernameValidation()
-                    },
-                    onDone = {
-                        usernameFieldDirty.value = true
-                        runUsernameValidation()
-                    },
-                    enabled = connectionStatus == ConnectionStatus.Disconnected,
-                    isError = usernameErrMsg.value.isNotEmpty(),
-                    modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth(),
-                )
-                if (usernameErrMsg.value.isNotEmpty()) {
-                    Text(
-                        usernameErrMsg.value,
-                        color = Color.Red,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
-                    )
-                }
-                StyledTextField(
-                    "Your Device ID",
-                    value = deviceID.value,
-                    onValueChange = {
-                        deviceID.value = it
-                        runDeviceIdValidation()
-                    },
-                    onDone = {
-                        deviceIdFieldDirty.value = true
-                        runDeviceIdValidation()
-                    },
-                    enabled = connectionStatus == ConnectionStatus.Disconnected,
-                    isError = deviceIdErrMsg.value.isNotEmpty(),
-                    modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
-                if (deviceIdErrMsg.value.isNotEmpty()) {
-                    Text(
-                        deviceIdErrMsg.value,
-                        color = Color.Red,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
-                    )
-                }
-                val deviceIP = viewModel.deviceIP.collectAsState()
-                // Device IP Display Field
-                StyledTextField(
-                    "Your Device IP",
-                    value = deviceIP.value,
-                    onValueChange = {
 
-                    },
-                    enabled = false,
-                    modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
-                SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
+            Text("Settings", modifier = Modifier.padding(top=20.dp, bottom = 10.dp))
+
+            StyledTextField(
+                "Account Username",
+                value = username.value,
+                onValueChange = {
+                    username.value = it
+                    runUsernameValidation()
+                },
+                onDone = {
+                    usernameFieldDirty.value = true
+                    runUsernameValidation()
+                },
+                enabled = connectionStatus == ConnectionStatus.Disconnected,
+                isError = usernameErrMsg.value.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            if (usernameErrMsg.value.isNotEmpty()) {
+                Text(
+                    usernameErrMsg.value,
+                    color = Color.Red,
+                )
+            }
+            StyledTextField(
+                "Your Device ID",
+                value = deviceID.value,
+                onValueChange = {
+                    deviceID.value = it
+                    runDeviceIdValidation()
+                },
+                onDone = {
+                    deviceIdFieldDirty.value = true
+                    runDeviceIdValidation()
+                },
+                enabled = connectionStatus == ConnectionStatus.Disconnected,
+                isError = deviceIdErrMsg.value.isNotEmpty(),
+                modifier = Modifier.padding(top = 20.dp).fillMaxWidth())
+            if (deviceIdErrMsg.value.isNotEmpty()) {
+                Text(
+                    deviceIdErrMsg.value,
+                    color = Color.Red,
+                )
+            }
+            val deviceIP = viewModel.deviceIP.collectAsState()
+            // Device IP Display Field
+            StyledTextField(
+                "Your Device IP",
+                value = deviceIP.value,
+                onValueChange = {
+
+                },
+                enabled = false,
+                modifier = Modifier.padding(top = 20.dp).fillMaxWidth())
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                var lineColor = Color(0x33232D42)
+                // Left line
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(lineColor)
+                )
+                SetupInstructionsLink(modifier = Modifier.padding(top = 30.dp, bottom = 30.dp, start = 5.dp, end = 5.dp))
+                // Right line
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(lineColor)
+                )
             }
 
+
             val buttonColor = when (connectionStatus) {
-                ConnectionStatus.Connecting -> colorFromHex("#49de7d")
-                ConnectionStatus.Connected -> colorFromHex("#f5524c")
-                ConnectionStatus.Disconnected -> colorFromHex("#49de7d")
+                ConnectionStatus.Connecting -> colorFromHex("#4A28C6")
+                ConnectionStatus.Connected -> colorFromHex("#232D42")
+                ConnectionStatus.Disconnected -> colorFromHex("#4A28C6")
             }
 
             Button(
@@ -284,10 +307,10 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                     viewModel.connectionButtonClicked()
                 },
                 modifier = Modifier
-                    .padding(start = 28.dp, end = 28.dp)
                     .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors().copy(containerColor = buttonColor)
+                    .height(55.dp),
+                colors = ButtonDefaults.buttonColors().copy(containerColor = buttonColor),
+                shape = RoundedCornerShape(5.dp)
             ) {
 
 
@@ -342,6 +365,7 @@ fun SettingsIconButton() {
 @Composable
 fun SetupInstructionsLink(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val textColor = Color(0x66232D42)
 
     val annotatedString = buildAnnotatedString {
         pushStringAnnotation(tag = "link", annotation = "https://proxyrack.com/mobile-proxies/")
@@ -349,9 +373,9 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
             // It seems the underline style is being overridden somehow.
             // When the app is opened in the emulator, the underline is visible for a split second.
             style = SpanStyle(
-                color = MaterialTheme.colorScheme.primary,
+                color = textColor,//aterialTheme.colorScheme.primary,
                 textDecoration = TextDecoration.Underline,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
             )
         ) {
             append("Setup Instructions")
@@ -476,7 +500,7 @@ fun StyledTextField(
     isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
-    var purple = Color(0xff4A28C6)
+
     var red = Color(0xffE8132C)
     // Set colors so that even if a text field is disabled, it will
     // have the same colors as an enabled text field.
