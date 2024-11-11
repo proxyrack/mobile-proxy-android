@@ -3,24 +3,34 @@ package com.proxyrack.control.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -36,13 +46,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -53,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.proxyrack.control.MainViewModel
+import com.proxyrack.control.R
 import com.proxyrack.control.domain.ConnectionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,179 +76,266 @@ import kotlinx.coroutines.launch
 fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        var keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current;
-        val connectionStatus by viewModel.connectionStatus.collectAsState()
+    val painter: Painter = painterResource(id = R.drawable.header_bg)
 
-        var username = rememberSaveable { mutableStateOf("") }
-        var deviceID = rememberSaveable { mutableStateOf("") }
-
-        // Loads the previously saved values into the form.
-        LaunchedEffect(Unit) {
-            viewModel.username.collect { value ->
-                Log.d("HOME", "username value: $value")
-                if (value.isNotEmpty()) {
-                    username.value = value
-                    return@collect
-                }
-            }
-        }
-        LaunchedEffect(Unit) {
-            viewModel.deviceID.collect { value ->
-                Log.d("HOME", "dID value: $value")
-                if (value.isNotEmpty()) {
-                    deviceID.value = value
-                    return@collect
-                }
-            }
-        }
-
-        var usernameErrMsg = rememberSaveable { mutableStateOf("") }
-        var usernameFieldDirty = rememberSaveable { mutableStateOf(false) } // whether field has been submitted at least once
-
-        var deviceIdErrMsg = rememberSaveable { mutableStateOf("") }
-        var deviceIdFieldDirty = rememberSaveable { mutableStateOf(false) } // whether field has been submitted at least once
-
-        Text(
-            "Mobile Proxy Control",
-            fontSize = 26.sp,
-        )
-
-        fun runValidation(fieldText: MutableState<String>, fieldDirty: MutableState<Boolean>, errMsg: MutableState<String>, validator: (String) -> ValidationResult): Boolean {
-            Log.d("MA", "running field validation")
-
-            val result = validator(fieldText.value)
-
-            if (fieldDirty.value && !result.isValid) {
-                errMsg.value = result.errMsg
-            } else {
-                errMsg.value = ""
-            }
-
-            return result.isValid
-        }
-        fun runUsernameValidation(): Boolean {
-            return runValidation(username, usernameFieldDirty, usernameErrMsg, ::usernameValidator)
-        }
-        fun runDeviceIdValidation(): Boolean {
-            return runValidation(deviceID, deviceIdFieldDirty, deviceIdErrMsg, ::deviceIdValidator)
-        }
-        TitledColumn("Settings") {
-            StyledTextField(
-                "Account Username",
-                value = username.value,
-                onValueChange = {
-                    username.value = it
-                    runUsernameValidation()
-                },
-                onDone = {
-                    usernameFieldDirty.value = true
-                    runUsernameValidation()
-                },
-                enabled = connectionStatus == ConnectionStatus.Disconnected,
-                isError = usernameErrMsg.value.isNotEmpty(),
-                modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth(),
-            )
-            if (usernameErrMsg.value.isNotEmpty()) {
-                Text(
-                    usernameErrMsg.value,
-                    color = Color.Red,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Header Section
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    //.height(200.dp)
+            ) {
+                Image(
+                    painter = painter,
+                    contentDescription = "Header Background",
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
-            StyledTextField(
-                "Your Device ID",
-                value = deviceID.value,
-                onValueChange = {
-                    deviceID.value = it
-                    runDeviceIdValidation()
-                },
-                onDone = {
-                    deviceIdFieldDirty.value = true
-                    runDeviceIdValidation()
-                },
-                enabled = connectionStatus == ConnectionStatus.Disconnected,
-                isError = deviceIdErrMsg.value.isNotEmpty(),
-                modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
-            if (deviceIdErrMsg.value.isNotEmpty()) {
-                Text(
-                    deviceIdErrMsg.value,
-                    color = Color.Red,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp)
-                )
-            }
-            val deviceIP = viewModel.deviceIP.collectAsState()
-            // Device IP Display Field
-            StyledTextField(
-                "Your Device IP",
-                value = deviceIP.value,
-                onValueChange = {
 
-                },
-                enabled = false,
-                modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
-            SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
+                // Header content on top of background
+                Row(
+                    modifier = Modifier.padding(10.dp).fillMaxWidth().align(Alignment.Center),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+
+                    Column {
+
+                        // Logo
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_full),
+                            contentDescription = "Logo",
+                        )
+
+
+                        // Connected Status
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                //.width(150.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(color = Color(0xffF0F5F5))
+                                .padding(4.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.wifi_disconnected),
+                                contentDescription = "Disconnected",
+                                modifier = Modifier.padding(start = 5.dp, end = 5.dp)
+                            )
+                            Text("Disconnected",
+                                color = Color(0x66232D42),
+                                modifier = Modifier.padding(end = 5.dp)
+                            )
+                        }
+                    }
+
+                    // Settings icon here
+                    SettingsIconButton()
+                }
+            }
         }
 
-        val buttonColor = when (connectionStatus) {
-            ConnectionStatus.Connecting -> colorFromHex("#49de7d")
-            ConnectionStatus.Connected -> colorFromHex("#f5524c")
-            ConnectionStatus.Disconnected -> colorFromHex("#49de7d")
-        }
-
-        Button(
-            onClick = {
-                // The user may click the connect button without first closing the
-                // keyboard. Go ahead and close it for them if that's the case.
-                keyboardController?.hide()
-
-                usernameFieldDirty.value = true
-                deviceIdFieldDirty.value = true
-                val formValid = runUsernameValidation() && runDeviceIdValidation()
-                if (!formValid) {
-                    return@Button
-                }
-
-                coroutineScope.launch(Dispatchers.IO) {
-                    viewModel.saveUsername(username.value)
-                    viewModel.saveDeviceID(deviceID.value)
-                }
-
-                viewModel.connectionButtonClicked()
-            },
-            modifier = Modifier
-                .padding(start = 28.dp, end = 28.dp)
-                .fillMaxWidth()
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors().copy(containerColor = buttonColor)
+        // Main Content
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            var keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current;
+            val connectionStatus by viewModel.connectionStatus.collectAsState()
 
-            val buttonText = when (connectionStatus) {
-                ConnectionStatus.Connecting -> "Connecting..."
-                ConnectionStatus.Connected -> "Disconnect"
-                ConnectionStatus.Disconnected -> "Connect"
+            var username = rememberSaveable { mutableStateOf("") }
+            var deviceID = rememberSaveable { mutableStateOf("") }
+
+            // Loads the previously saved values into the form.
+            LaunchedEffect(Unit) {
+                viewModel.username.collect { value ->
+                    Log.d("HOME", "username value: $value")
+                    if (value.isNotEmpty()) {
+                        username.value = value
+                        return@collect
+                    }
+                }
+            }
+            LaunchedEffect(Unit) {
+                viewModel.deviceID.collect { value ->
+                    Log.d("HOME", "dID value: $value")
+                    if (value.isNotEmpty()) {
+                        deviceID.value = value
+                        return@collect
+                    }
+                }
             }
 
-            Text(
-                buttonText,
-                style = TextStyle(
-                    fontSize = 19.sp
-                ),
+            var usernameErrMsg = rememberSaveable { mutableStateOf("") }
+            var usernameFieldDirty = rememberSaveable { mutableStateOf(false) } // whether field has been submitted at least once
+
+            var deviceIdErrMsg = rememberSaveable { mutableStateOf("") }
+            var deviceIdFieldDirty = rememberSaveable { mutableStateOf(false) } // whether field has been submitted at least once
+
+//        Text(
+//            "Mobile Proxy Control",
+//            fontSize = 26.sp,
+//        )
+
+            fun runValidation(fieldText: MutableState<String>, fieldDirty: MutableState<Boolean>, errMsg: MutableState<String>, validator: (String) -> ValidationResult): Boolean {
+                Log.d("MA", "running field validation")
+
+                val result = validator(fieldText.value)
+
+                if (fieldDirty.value && !result.isValid) {
+                    errMsg.value = result.errMsg
+                } else {
+                    errMsg.value = ""
+                }
+
+                return result.isValid
+            }
+            fun runUsernameValidation(): Boolean {
+                return runValidation(username, usernameFieldDirty, usernameErrMsg, ::usernameValidator)
+            }
+            fun runDeviceIdValidation(): Boolean {
+                return runValidation(deviceID, deviceIdFieldDirty, deviceIdErrMsg, ::deviceIdValidator)
+            }
+            TitledColumn("Settings") {
+                StyledTextField(
+                    "Account Username",
+                    value = username.value,
+                    onValueChange = {
+                        username.value = it
+                        runUsernameValidation()
+                    },
+                    onDone = {
+                        usernameFieldDirty.value = true
+                        runUsernameValidation()
+                    },
+                    enabled = connectionStatus == ConnectionStatus.Disconnected,
+                    isError = usernameErrMsg.value.isNotEmpty(),
+                    modifier = Modifier.padding(start = 16.dp, top = 35.dp, end = 16.dp).fillMaxWidth(),
+                )
+                if (usernameErrMsg.value.isNotEmpty()) {
+                    Text(
+                        usernameErrMsg.value,
+                        color = Color.Red,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                    )
+                }
+                StyledTextField(
+                    "Your Device ID",
+                    value = deviceID.value,
+                    onValueChange = {
+                        deviceID.value = it
+                        runDeviceIdValidation()
+                    },
+                    onDone = {
+                        deviceIdFieldDirty.value = true
+                        runDeviceIdValidation()
+                    },
+                    enabled = connectionStatus == ConnectionStatus.Disconnected,
+                    isError = deviceIdErrMsg.value.isNotEmpty(),
+                    modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
+                if (deviceIdErrMsg.value.isNotEmpty()) {
+                    Text(
+                        deviceIdErrMsg.value,
+                        color = Color.Red,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+                    )
+                }
+                val deviceIP = viewModel.deviceIP.collectAsState()
+                // Device IP Display Field
+                StyledTextField(
+                    "Your Device IP",
+                    value = deviceIP.value,
+                    onValueChange = {
+
+                    },
+                    enabled = false,
+                    modifier = Modifier.padding(start = 16.dp, top = 20.dp, end = 16.dp).fillMaxWidth())
+                SetupInstructionsLink(modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 30.dp, bottom = 30.dp))
+            }
+
+            val buttonColor = when (connectionStatus) {
+                ConnectionStatus.Connecting -> colorFromHex("#49de7d")
+                ConnectionStatus.Connected -> colorFromHex("#f5524c")
+                ConnectionStatus.Disconnected -> colorFromHex("#49de7d")
+            }
+
+            Button(
+                onClick = {
+                    // The user may click the connect button without first closing the
+                    // keyboard. Go ahead and close it for them if that's the case.
+                    keyboardController?.hide()
+
+                    usernameFieldDirty.value = true
+                    deviceIdFieldDirty.value = true
+                    val formValid = runUsernameValidation() && runDeviceIdValidation()
+                    if (!formValid) {
+                        return@Button
+                    }
+
+                    coroutineScope.launch(Dispatchers.IO) {
+                        viewModel.saveUsername(username.value)
+                        viewModel.saveDeviceID(deviceID.value)
+                    }
+
+                    viewModel.connectionButtonClicked()
+                },
+                modifier = Modifier
+                    .padding(start = 28.dp, end = 28.dp)
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors().copy(containerColor = buttonColor)
+            ) {
+
+
+                val buttonText = when (connectionStatus) {
+                    ConnectionStatus.Connecting -> "Connecting..."
+                    ConnectionStatus.Connected -> "Disconnect"
+                    ConnectionStatus.Disconnected -> "Connect"
+                }
+
+                Text(
+                    buttonText,
+                    style = TextStyle(
+                        fontSize = 19.sp
+                    ),
+                )
+            }
+
+            val logMessages by viewModel.logMessages.collectAsState()
+            LogsColumn(
+                title = "Logs",
+                logMessages = logMessages,
+                modifier = Modifier.fillMaxSize()
             )
         }
-
-        val logMessages by viewModel.logMessages.collectAsState()
-        LogsColumn(
-            title = "Logs",
-            logMessages = logMessages,
-            modifier = Modifier.fillMaxSize()
-        )
     }
 
+    Box(modifier = Modifier.fillMaxSize()) {
+
+
+    }
+
+
+
+}
+
+@Composable
+fun SettingsIconButton() {
+    IconButton(
+        onClick = { /* Handle the click event */ },
+        modifier = Modifier
+            .background(color = Color(0xff232D42), shape = RoundedCornerShape(8.dp))
+            .size(42.dp) // Adjust the size as needed
+    ) {
+        Icon(
+            imageVector = Icons.Default.Settings,
+            contentDescription = "Settings",
+            tint = Color.White,
+            modifier = Modifier.size(28.dp)
+        )
+    }
 }
 
 // https://stackoverflow.com/a/69549929/6716264
