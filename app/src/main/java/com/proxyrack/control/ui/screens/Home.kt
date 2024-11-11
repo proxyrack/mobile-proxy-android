@@ -32,6 +32,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -84,7 +86,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    //.height(200.dp)
+                    .clip(RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp))
             ) {
                 Image(
                     painter = painter,
@@ -317,8 +319,6 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
     }
 
-
-
 }
 
 @Composable
@@ -476,12 +476,20 @@ fun StyledTextField(
     isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
 ) {
-
+    var purple = Color(0xff4A28C6)
+    var red = Color(0xffE8132C)
     // Set colors so that even if a text field is disabled, it will
     // have the same colors as an enabled text field.
-    var colors = TextFieldDefaults.colors()
+    var colors = OutlinedTextFieldDefaults.colors(
+        unfocusedBorderColor = Color(0x33232D42),
+        focusedBorderColor = purple,
+        focusedLabelColor = purple,
+        unfocusedLabelColor = Color(0x99232D42),
+        errorLabelColor = red,
+        errorBorderColor = red
+    )
     if (!enabled) {
-        colors = TextFieldDefaults.colors(
+        colors = OutlinedTextFieldDefaults.colors(
             disabledTextColor = colors.unfocusedTextColor,
             disabledLabelColor = colors.unfocusedLabelColor,
         )
@@ -492,8 +500,9 @@ fun StyledTextField(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
-    TextField(
+    OutlinedTextField(
         modifier = modifier.focusRequester(focusRequester),
+        shape = RoundedCornerShape(14.dp),
         onValueChange = onValueChange,
         value = value,
         label = { Text(label) },
