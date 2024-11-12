@@ -13,6 +13,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.core.content.ContextCompat
@@ -65,7 +67,10 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            // Makes status bar icons white
+            statusBarStyle = SystemBarStyle.dark(0)
+        )
         setContent {
             ProxyControlTheme {
                 val viewModel: MainViewModel by viewModels()
@@ -79,50 +84,15 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        CenterAlignedTopAppBar(
-                            title = {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.logo),
-                                        contentDescription = "Logo",
-                                    )
-                                    Text(" Proxyrack")
-                            } },
-                            navigationIcon = {if (canNavigateBack) {
 
-                                    IconButton(onClick = { navController.navigateUp() }) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = "Back"
-                                        )
-                                    }
-
-                            }},
-                            actions = {
-                                if (backStackEntry?.destination?.route != Screen.Settings.route) {
-                                    IconButton(onClick = {
-                                        navController.navigate(Screen.Settings.route)
-                                    }) {
-                                        Icon(
-                                            imageVector = Icons.Default.Settings,
-                                            contentDescription = "Settings"
-                                        )
-                                    }
-                                }
-                            }
-                        )
-                    }
                 ) { contentPadding ->
                     NavHost(
                         navController = navController,
                         startDestination = Screen.Home.route,
-                        modifier = Modifier.padding(contentPadding)
+                        modifier = Modifier.padding(bottom = contentPadding.calculateBottomPadding())
                     ) {
                         composable(Screen.Home.route) { HomeScreen(navController, viewModel) }
-                        composable(Screen.Settings.route) { SettingsScreen() }
+                        composable(Screen.Settings.route) { SettingsScreen(navController) }
                         // Add more composable destinations as needed
                     }
                 }
