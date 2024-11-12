@@ -62,15 +62,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import com.proxyrack.control.MainViewModel
 import com.proxyrack.control.R
 import com.proxyrack.control.domain.ConnectionStatus
+import com.proxyrack.control.ui.theme.poppinsFontFamily
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -80,65 +83,9 @@ var purple = Color(0xff4A28C6)
 fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val coroutineScope = rememberCoroutineScope()
 
-    val painter: Painter = painterResource(id = R.drawable.header_bg)
-
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header Section
-        Column {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp))
-            ) {
-                Image(
-                    painter = painter,
-                    contentDescription = "Header Background",
-                    modifier = Modifier.fillMaxWidth()
-                )
 
-                // Header content on top of background
-                Row(
-                    modifier = Modifier.padding(10.dp).fillMaxWidth().align(Alignment.Center),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-
-                    Column {
-
-                        // Logo
-                        Image(
-                            painter = painterResource(id = R.drawable.logo_full),
-                            contentDescription = "Logo",
-                        )
-
-
-                        // Connected Status
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(top = 8.dp)
-                                //.width(150.dp)
-                                .clip(RoundedCornerShape(5.dp))
-                                .background(color = Color(0xffF0F5F5))
-                                .padding(4.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.wifi_disconnected),
-                                contentDescription = "Disconnected",
-                                modifier = Modifier.padding(start = 5.dp, end = 5.dp)
-                            )
-                            Text("Disconnected",
-                                color = Color(0x66232D42),
-                                modifier = Modifier.padding(end = 5.dp)
-                            )
-                        }
-                    }
-
-                    // Settings icon here
-                    SettingsIconButton()
-                }
-            }
-        }
+        Header(viewModel)
 
         // Main Content
         Column(
@@ -147,6 +94,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
         ) {
             Text(
                 "Mobile Proxy Control",
+                fontWeight = FontWeight.ExtraBold,
                 fontSize = 20.sp,
                 color = purple,
             )
@@ -203,10 +151,12 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 return runValidation(deviceID, deviceIdFieldDirty, deviceIdErrMsg, ::deviceIdValidator)
             }
 
-            Text("Settings", modifier = Modifier.padding(top=20.dp, bottom = 10.dp))
+            Text("Settings",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top=20.dp, bottom = 10.dp))
 
             StyledTextField(
-                "Account Username",
+                "Username",
                 value = username.value,
                 onValueChange = {
                     username.value = it
@@ -342,6 +292,80 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
     }
 
+}
+
+@Composable
+fun Header(viewModel: MainViewModel) {
+    val connectionStatus by viewModel.connectionStatus.collectAsState()
+    val painter: Painter = painterResource(id = R.drawable.header_bg)
+
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp))
+        ) {
+            Image(
+                painter = painter,
+                contentDescription = "Header Background",
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Header content on top of background
+            Row(
+                modifier = Modifier.padding(10.dp).fillMaxWidth().align(Alignment.Center),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+
+                Column {
+
+                    // Logo
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_full),
+                        contentDescription = "Logo",
+                    )
+
+                    // Connected Status
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            //.width(150.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                            .background(color = Color(0xffF0F5F5))
+                            .padding(4.dp)
+                    ) {
+                        if (connectionStatus == ConnectionStatus.Disconnected || connectionStatus == ConnectionStatus.Connecting) {
+                            Image(
+                                painter = painterResource(id = R.drawable.wifi_disconnected),
+                                contentDescription = "Connection Status Disconnected",
+                                modifier = Modifier.padding(start = 5.dp, end = 5.dp)
+                            )
+                            Text("Disconnected",
+                                color = Color(0x66232D42),
+                                modifier = Modifier.padding(end = 5.dp)
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.wifi_connected),
+                                contentDescription = "Connection Status Connected",
+                                modifier = Modifier.padding(start = 5.dp, end = 5.dp)
+                            )
+                            Text("Connected",
+                                color = purple,
+                                modifier = Modifier.padding(end = 5.dp)
+                            )
+                        }
+
+                    }
+                }
+
+                // Settings icon here
+                SettingsIconButton()
+            }
+        }
+    }
 }
 
 @Composable
