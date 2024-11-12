@@ -3,13 +3,16 @@ package com.proxyrack.control.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,6 +29,7 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -49,6 +53,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -282,7 +287,6 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             LogsColumn(
                 title = "Logs",
                 logMessages = logMessages,
-                modifier = Modifier.fillMaxSize()
             )
         }
     }
@@ -313,7 +317,7 @@ fun Header(viewModel: MainViewModel) {
 
             // Header content on top of background
             Row(
-                modifier = Modifier.padding(10.dp).fillMaxWidth().align(Alignment.Center),
+                modifier = Modifier.padding(start = 20.dp, top = 35.dp, end = 20.dp, bottom = 20.dp).fillMaxWidth().align(Alignment.Center),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -331,7 +335,6 @@ fun Header(viewModel: MainViewModel) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .padding(top = 8.dp)
-                            //.width(150.dp)
                             .clip(RoundedCornerShape(5.dp))
                             .background(color = Color(0xffF0F5F5))
                             .padding(4.dp)
@@ -421,44 +424,10 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun TitledColumn(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    Box(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Column(
-            modifier = modifier
-                .padding(10.dp)
-                .border(
-                    width = 2.dp,
-                    color = Color.Black,
-                    shape = RoundedCornerShape(5.dp)
-                )
-        ) {
-            content()
-        }
-        Box(
-            // Having 2 calls to 'padding' looks a bit confusing.
-            // But remember that each modifier method call operates on the
-            // result of the previous call.
-            modifier = Modifier
-                .padding(start = 20.dp)
-                .background(MaterialTheme.colorScheme.background)
-                .padding(start = 5.dp, end = 5.dp)
-        ) {
-            Text(title)
-        }
-    }
-}
-
-@Composable
 fun LogsColumn(
     title: String,
     modifier: Modifier = Modifier,
-    logMessages: List<String>
+    logMessages: List<String>,
 ) {
     // Create a LazyListState to control the scroll position
     val listState = rememberLazyListState()
@@ -471,46 +440,80 @@ fun LogsColumn(
         }
     }
 
-    Box(
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 30.dp)
-    ) {
+    val grey = Color(0x33232D42)
+    var expanded = rememberSaveable() { mutableStateOf(false) }
 
-        Box(
-            modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 10.dp).border(
-                width = 2.dp,
-                color = Color.Black,
+    Column(
+        modifier = Modifier.padding(top = 20.dp)
+            .border(
+                width = 1.dp,
+                color = grey,
                 shape = RoundedCornerShape(5.dp)
             )
-        ) {
-            LazyColumn(
-                state = listState,
-                verticalArrangement = Arrangement.spacedBy(0.dp),
-                modifier = modifier
-                    .padding(top = 20.dp)
-
-            ) {
-                itemsIndexed(logMessages) { index, msg ->
-                    //val topPadding = if (index == 0) 15.dp else 0.dp
-                    Text(msg, modifier = Modifier.padding(
-                        //top = topPadding,
-                        start = 10.dp,
-                        end = 10.dp))
+            .animateContentSize()
+            .then(
+                if (expanded.value) {
+                    Modifier.fillMaxHeight() // Fill the maximum available height when expanded
+                } else {
+                    Modifier.height(50.dp) // Use a fixed height when not expanded
                 }
+            )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .height(50.dp)
+                .fillMaxWidth()
+                // Draw a border on only the bottom of the row
+                .then(
+                    if (expanded.value) {
+                        Modifier.drawBehind {
+                            val strokeWidth = 1.dp.toPx() // Border thickness
+                            val y = size.height - strokeWidth / 2 // Position the line at the bottom
+                            drawLine(
+                                color = grey,
+                                start = androidx.compose.ui.geometry.Offset(0f, y),
+                                end = androidx.compose.ui.geometry.Offset(size.width, y),
+                                strokeWidth = strokeWidth
+                            )
+                        }
+                    } else {
+                        Modifier
+                    }
+                )
+                .clickable {
+                    expanded.value = !expanded.value
+                }
+        ) {
+            Text("Logs",
+                color = Color(0x66232D42),
+                modifier = Modifier.padding(start = 15.dp),
+                )
+            Icon(
+                imageVector = Icons.Default.ArrowDropDown,
+                contentDescription = "Downward Carrot",
+                tint = grey,
+                modifier = Modifier.padding(end = 5.dp)
+            )
+        }
+        LazyColumn(
+            state = listState,
+            verticalArrangement = Arrangement.spacedBy(0.dp),
+            modifier = modifier
+                .fillMaxWidth()
+
+        ) {
+            itemsIndexed(logMessages) { index, msg ->
+                //val topPadding = if (index == 0) 15.dp else 0.dp
+                Text(msg, modifier = Modifier.padding(
+                    //top = topPadding,
+                    start = 10.dp,
+                    end = 10.dp))
             }
         }
-
-        Box(
-            // Having 2 calls to 'padding' looks a bit confusing.
-            // But remember that each modifier method call operates on the
-            // result of the previous call.
-            modifier = Modifier
-                .padding(start = 20.dp)
-                .background(MaterialTheme.colorScheme.background)
-                .padding(start = 5.dp, end = 5.dp)
-        ) {
-            Text(title, modifier = Modifier.padding(vertical = 0.dp))
-        }
     }
+
 }
 
 @Composable
