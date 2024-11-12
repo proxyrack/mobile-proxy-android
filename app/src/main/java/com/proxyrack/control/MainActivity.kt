@@ -92,7 +92,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(bottom = contentPadding.calculateBottomPadding())
                     ) {
                         composable(Screen.Home.route) { HomeScreen(navController, viewModel) }
-                        composable(Screen.Settings.route) { SettingsScreen() }
+                        composable(Screen.Settings.route) { SettingsScreen(navController) }
                         // Add more composable destinations as needed
                     }
                 }

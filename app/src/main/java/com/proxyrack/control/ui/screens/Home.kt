@@ -73,10 +73,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import com.proxyrack.control.MainViewModel
 import com.proxyrack.control.R
+import com.proxyrack.control.Screen
 import com.proxyrack.control.domain.ConnectionStatus
 import com.proxyrack.control.ui.theme.poppinsFontFamily
 import kotlinx.coroutines.Dispatchers
@@ -90,7 +90,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        Header(viewModel)
+        Header(navController, viewModel)
 
         // Main Content
         Column(
@@ -99,7 +99,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
         ) {
             Text(
                 "Mobile Proxy Control",
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.W700,
                 fontSize = 20.sp,
                 color = purple,
             )
@@ -299,7 +299,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 }
 
 @Composable
-fun Header(viewModel: MainViewModel) {
+fun Header(navController: NavController, viewModel: MainViewModel) {
     val connectionStatus by viewModel.connectionStatus.collectAsState()
     val painter: Painter = painterResource(id = R.drawable.header_bg)
 
@@ -364,17 +364,19 @@ fun Header(viewModel: MainViewModel) {
                     }
                 }
 
-                // Settings icon here
-                SettingsIconButton()
+                SettingsIconButton(navController)
             }
         }
     }
 }
 
 @Composable
-fun SettingsIconButton() {
+fun SettingsIconButton(navController: NavController) {
+
     IconButton(
-        onClick = { /* Handle the click event */ },
+        onClick = {
+            navController.navigate(Screen.Settings.route)
+        },
         modifier = Modifier
             .background(color = Color(0xff232D42), shape = RoundedCornerShape(8.dp))
             .size(42.dp) // Adjust the size as needed
