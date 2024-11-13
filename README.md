@@ -22,7 +22,7 @@ or build it yourself using the instructions below.
 1. Run the script 'build.sh'
 2. The generated apk will be in the path ./app/build/outputs/apk/release/app-release.apk
 
-The build takes 10 or 15 min on an m1 mac. It builds much faster when not dockerized (30 seconds). That's something to look into.
+The build takes 10 or 15 min on an m1 mac. It builds much faster when not dockerized (30 seconds).
 
 ## Usage
 
