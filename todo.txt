@@ -1,4 +1,0 @@
-- Alarm to restart foreground service in case it's killed by OS (optional)
-- Sometimes after pressing connect, the foreground dialog will say connected, and button
-will be red, and there will be no log messages. And a few seconds later the button will
-turn green again and there will be a log message "Failed to dial server: context deadline exceeded"
