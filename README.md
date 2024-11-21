@@ -35,4 +35,4 @@ The build takes 10 or 15 min on an m1 mac. It builds much faster when not docker
 
 ---
 
-For more information, check out https://www.proxyrack.com/mobile-proxies/ or contact us at [support@proxyrack.com](mailto:support@proxyrack.com).
+For more information, check out https://www.proxyrack.com/mobile-proxy/ or contact us at [support@proxyrack.com](mailto:support@proxyrack.com).
