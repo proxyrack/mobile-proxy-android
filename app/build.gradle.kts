@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hiltAndroid)
     kotlin("kapt")
+
+    id("io.sentry.android.gradle") version "4.14.0"
 }
 
 android {
@@ -93,4 +95,13 @@ dependencies {
 
 kapt {
     correctErrorTypes = true
+}
+
+sentry {
+    org.set("proxyrack")
+    projectName.set("android-peer-client")
+
+    // this will upload your source code to Sentry to show it as part of the stack traces
+    // disable if you don't want to expose your sources
+    includeSourceContext.set(true)
 }
