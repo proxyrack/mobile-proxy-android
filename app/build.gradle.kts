@@ -104,4 +104,5 @@ sentry {
     // this will upload your source code to Sentry to show it as part of the stack traces
     // disable if you don't want to expose your sources
     includeSourceContext.set(true)
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
 }
