@@ -40,6 +40,8 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build with Gradle
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: ./gradlew clean build
 
       - name: Upload APK
