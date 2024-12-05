@@ -168,7 +168,9 @@ class ConnectionService : Service() {
         super.onDestroy()
         Log.d("connection service", "onDestroy called")
         disconnectRequestedByUser.set(true)
-        proxyManager.disconnect()
+        if (::proxyManager.isInitialized) {
+            proxyManager.disconnect()
+        }
     }
 
     private fun createNotificationChannel() {
