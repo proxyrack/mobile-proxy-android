@@ -1,8 +1,8 @@
 package com.proxyrack.control.data.repository
 
-import com.proxyrack.control.data.model.IpInfo
 import com.proxyrack.control.data.network.IPInfoRetrofitInstance
 import com.proxyrack.control.data.network.IpInfoApiService
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -10,18 +10,23 @@ import retrofit2.Response
 class IpInfoRepository {
     private val apiService: IpInfoApiService = IPInfoRetrofitInstance.retrofit.create(IpInfoApiService::class.java)
 
-    fun getIpInfo(callback: (IpInfo?, Throwable?) -> Unit) {
+    fun getIpInfo(callback: (String?, Throwable?) -> Unit) {
         val call = apiService.getIpInfo()
-        call.enqueue(object : Callback<IpInfo> {
-            override fun onResponse(call: Call<IpInfo>, response: Response<IpInfo>) {
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.isSuccessful) {
-                    callback(response.body(), null)
+                    val responseBody = response.body()
+                    if (responseBody != null) {
+                        callback(responseBody.string(), null)
+                    } else {
+                        callback(null, Throwable("Error: Empty response body"))
+                    }
                 } else {
                     callback(null, Throwable("Error: ${response.code()}"))
                 }
             }
 
-            override fun onFailure(call: Call<IpInfo>, t: Throwable) {
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 callback(null, t)
             }
         })

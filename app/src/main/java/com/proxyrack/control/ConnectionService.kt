@@ -88,10 +88,10 @@ class ConnectionService : Service() {
             connectionRepo.updateConnectionStatus(ConnectionStatus.Connected)
             Log.d(TAG, "registerOnConnectCallback called")
 
-            ipInfoRepo.getIpInfo { info, error ->
-                if (info != null) {
-                    Log.d(TAG, "IP: ${info.ip}")
-                    connectionRepo.updateDeviceIP(info.ip)
+            ipInfoRepo.getIpInfo { ip, error ->
+                if (ip != null) {
+                    Log.d(TAG, "IP: $ip")
+                    connectionRepo.updateDeviceIP(ip)
                 } else if (error != null) {
                     Log.d(TAG, error.toString())
                 }

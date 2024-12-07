@@ -6,14 +6,14 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object IPInfoRetrofitInstance {
-    private const val BASE_URL = "https://ipinfo.io"
+    private const val BASE_URL = "https://check.ragpets.com/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
     private val httpClient = OkHttpClient.Builder()
-        //.addInterceptor(loggingInterceptor)
+        .addInterceptor(loggingInterceptor)
         .build()
 
     val retrofit: Retrofit by lazy {
