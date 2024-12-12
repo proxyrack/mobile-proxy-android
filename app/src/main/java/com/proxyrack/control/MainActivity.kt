@@ -113,6 +113,21 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // read the airplane mode setting
+        val isEnabled = Settings.System.getInt(
+                getContentResolver(),
+        Settings.Global.AIRPLANE_MODE_ON, 0) == 1;
+
+        // toggle airplane mode
+        Settings.System.putInt(
+            getContentResolver(),
+            Settings.Global.AIRPLANE_MODE_ON, if (isEnabled) 0 else 1);
+
+        // Post an intent to reload
+        val intent = Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        intent.putExtra("state", !isEnabled);
+        sendBroadcast(intent);
+
         initializationTasks()
         requestNotificationPermission()
     }

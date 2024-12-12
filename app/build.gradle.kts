@@ -40,11 +40,15 @@ android {
             )
             signingConfig = signingConfigs.getByName("release")
             buildConfigField("String", "SERVER_IP", "\"mobile-socket.culturegps.com\"")
+            buildConfigField("String", "SENTRY_DSN", "\"https://8bbb406627a4f1fd65da8bf730383142@o58319.ingest.us.sentry.io/4508366264008704\"") // for access in code
+            manifestPlaceholders["SENTRY_DSN"] = "https://8bbb406627a4f1fd65da8bf730383142@o58319.ingest.us.sentry.io/4508366264008704" // for access in manifest
         }
         debug {
             //applicationIdSuffix = ".debug"
             isDebuggable = true
             buildConfigField("String", "SERVER_IP", "\"95.216.229.111\"")
+            buildConfigField("String", "SENTRY_DSN", "\"\"") // Empty DSN for debug builds so that we don't send events to sentry
+            manifestPlaceholders["SENTRY_DSN"] = "" // Empty DSN for debug builds
         }
     }
     compileOptions {
