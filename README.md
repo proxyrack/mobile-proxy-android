@@ -2,9 +2,9 @@
 
 **Proxyrack Mobile Proxy Client** is a free and powerful solution for creating and managing mobile proxies directly from your mobile devices. Similar to **Proxidize** and **iProxy**, this app allows you to turn your device into a mobile proxy with minimal setup, offering both HTTP and SOCKS protocols for secure, reliable connections. With a user-friendly web dashboard, you can monitor and manage all connected devices with ease.
 
-<div style="display: flex; justify-content: center;">
-  <img src="./screenshots/screenshot_1.png" alt="Project Screenshot" style="max-width: 100%; height: auto" width=400px/>
-</div>
+<p align="center">
+  <img src="./screenshots/screenshot_1.png" style="max-width: 100%; height: auto" width="400">
+</p>
 
 ## Key Features
 
