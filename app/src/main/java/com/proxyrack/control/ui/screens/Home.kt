@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -28,11 +31,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -212,6 +225,8 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 enabled = false,
                 modifier = Modifier.padding(top = 20.dp).fillMaxWidth())
 
+            RotationRow()
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -233,7 +248,6 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                         .background(lineColor)
                 )
             }
-
 
             val buttonColor = when (connectionStatus) {
                 ConnectionStatus.Connecting -> colorFromHex("#4A28C6")
@@ -297,6 +311,128 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     }
 
 }
+
+@Composable
+fun RotationRow() {
+    Row(
+        horizontalArrangement = Arrangement.End,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        IconButton(
+            onClick = {
+
+            },
+            modifier = Modifier
+                .width(30.dp)
+                .height(30.dp)
+                .background(color = Color(0xff232D42), shape = CircleShape)
+                .clip(CircleShape)
+        ) {
+            Text("?", color = Color.White)
+        }
+    }
+    Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+
+            RotationTimeMenu()
+
+            Button(
+                onClick = {
+
+                },
+                colors = ButtonDefaults.buttonColors().copy(containerColor = Color.Transparent),
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(55.dp)
+                    .border(
+                        border = BorderStroke(1.dp, Color.Black),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Rotate",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text("Rotate Now", color = Color.Black, style = TextStyle(fontSize = 17.sp))
+                }
+
+            }
+
+
+
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RotationTimeMenu(modifier: Modifier = Modifier) {
+    val options: List<String> = listOf("Disabled", "1 min", "3 min", "5 min", "10 min", "15 min", "30 min")
+    var expanded = rememberSaveable() { mutableStateOf(false) }
+    val textFieldState = rememberTextFieldState(options[0])
+
+    var red = Color(0xffE8132C)
+    // Set colors so that even if a text field is disabled, it will
+    // have the same colors as an enabled text field.
+    var colors = OutlinedTextFieldDefaults.colors(
+        unfocusedBorderColor = Color(0x33232D42),
+        focusedBorderColor = purple,
+        focusedLabelColor = purple,
+        unfocusedLabelColor = Color(0x99232D42),
+        errorLabelColor = red,
+        errorBorderColor = red
+    )
+//    if (!enabled) {
+//        colors = OutlinedTextFieldDefaults.colors(
+//            disabledTextColor = colors.unfocusedTextColor,
+//            disabledLabelColor = colors.unfocusedLabelColor,
+//        )
+//    }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded.value,
+        onExpandedChange = { expanded.value = it },
+    ) {
+        OutlinedTextField(
+            // The `menuAnchor` modifier must be passed to the text field to handle
+            // expanding/collapsing the menu on click. A read-only text field has
+            // the anchor type `PrimaryNotEditable`.
+            modifier = modifier.width(150.dp).menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            state = textFieldState,
+            readOnly = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            label = { Text("IP Rotation Interval") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value) },
+            colors = colors,
+            shape = RoundedCornerShape(14.dp),
+        )
+        ExposedDropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false },
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option, style = MaterialTheme.typography.bodyLarge) },
+                    onClick = {
+                        textFieldState.setTextAndPlaceCursorAtEnd(option)
+                        expanded.value = false
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 fun Header(navController: NavController, viewModel: MainViewModel) {

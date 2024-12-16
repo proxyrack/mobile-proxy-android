@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.proxyrack.control"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.proxyrack.control"
@@ -66,6 +66,7 @@ android {
 
 dependencies {
     implementation(files("libs/android_lib_emulator.aar"))
+    implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.posthog.android)
     implementation(libs.retrofit2.retrofit)
