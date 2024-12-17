@@ -8,5 +8,6 @@ class SettingsRepoImpl(
     override val username: DataAccessor,
     override val initialized: DataAccessor,
     override val analyticsEnabled: DataAccessor,
+    override val ipRotationInterval: DataAccessor,
     ) : SettingsRepo {
 }

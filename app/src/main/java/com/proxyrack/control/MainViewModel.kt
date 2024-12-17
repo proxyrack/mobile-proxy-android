@@ -19,6 +19,8 @@ class MainViewModel @Inject constructor(
     private val settingsRepo: SettingsRepo,
     private val connectionRepo: ConnectionRepo): AndroidViewModel(application) {
 
+    private val ipRotator = IPRotator()
+
     val username: StateFlow<String>
         get() = connectionRepo.username
 
@@ -62,6 +64,23 @@ class MainViewModel @Inject constructor(
         settingsRepo.deviceID.set(id)
     }
 
+    suspend fun setIPRotationInterval(text: String) {
+
+        val rotationInterval = parseFirstCharacterToInt(text)
+        if (rotationInterval > 0) {
+            ipRotator.setRotationInterval(rotationInterval)
+        } else {
+            ipRotator.disableRotationInterval()
+        }
+
+        // save to preferences
+        settingsRepo.ipRotationInterval.set(text)
+    }
+
+    fun rotateIP() {
+        ipRotator.rotate()
+    }
+
     fun connectionButtonClicked() {
         when (connectionStatus.value) {
             ConnectionStatus.Connecting -> return
@@ -88,3 +107,10 @@ class MainViewModel @Inject constructor(
 
 }
 
+fun parseFirstCharacterToInt(input: String): Int {
+    return if (input.isNotEmpty() && input.first().isDigit()) {
+        input.first().toString().toInt()
+    } else {
+        0
+    }
+}

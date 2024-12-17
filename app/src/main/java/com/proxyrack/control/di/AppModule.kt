@@ -40,8 +40,10 @@ object AppModule {
         @Named("username") usernameAccessor: DataAccessor,
         @Named("initialized") initializedAccessor: DataAccessor,
         @Named("analytics") analyticsAccessor: DataAccessor,
+        @Named("ipRotationInterval") ipRotationIntervalAccessor: DataAccessor,
     ): SettingsRepo {
-        return SettingsRepoImpl(deviceIDAccessor, usernameAccessor, initializedAccessor, analyticsAccessor)
+        return SettingsRepoImpl(deviceIDAccessor, usernameAccessor, initializedAccessor,
+            analyticsAccessor, ipRotationIntervalAccessor)
     }
 
     @Provides
@@ -86,6 +88,13 @@ object AppModule {
     @Named("analytics")
     fun provideAnalyticsAccessor(datastore: DataStore<Preferences>): DataAccessor {
         return DataAccessorImpl(datastore, "analytics")
+    }
+
+    @Provides
+    @Singleton
+    @Named("ipRotationInterval")
+    fun provideIPRotationIntervalAccessor(datastore: DataStore<Preferences>): DataAccessor {
+        return DataAccessorImpl(datastore, "ipRotationInterval")
     }
 
     @Provides

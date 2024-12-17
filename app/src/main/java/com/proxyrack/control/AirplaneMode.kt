@@ -1,5 +1,7 @@
 package com.proxyrack.control
 
+import kotlinx.coroutines.delay
+
 class AirplaneMode {
 
     // Checks if phone is rooted, but not whether the app has been granted super user rights.
@@ -32,4 +34,9 @@ class AirplaneMode {
 
     }
 
+    suspend fun toggleOnOff() {
+        enable()
+        delay(1000)
+        disable()
+    }
 }

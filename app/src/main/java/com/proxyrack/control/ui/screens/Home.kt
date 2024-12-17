@@ -231,7 +231,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 enabled = false,
                 modifier = Modifier.padding(top = 20.dp).fillMaxWidth())
 
-            IPRotationRow()
+            IPRotationRow(viewModel)
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -319,12 +319,12 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 }
 
 @Composable
-fun IPRotationRow() {
+fun IPRotationRow(viewModel: MainViewModel) {
     val ap = AirplaneMode()
     val isRooted = ap.isRooted()
 
     if (!isRooted) {
-        questionMarkCircleButton()
+        QuestionMarkCircleButton()
     } else {
         Row(modifier = Modifier.height(20.dp)) {  } // just a spacer
     }
@@ -334,14 +334,14 @@ fun IPRotationRow() {
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            RotationTimeDropdown(enabled = isRooted)
+            RotationTimeDropdown(viewModel, enabled = isRooted)
 
-            RotateIPButton(enabled = isRooted)
+            RotateIPButton(viewModel, enabled = isRooted)
     }
 }
 
 @Composable
-fun questionMarkCircleButton() {
+fun QuestionMarkCircleButton() {
     var showDialog = rememberSaveable { mutableStateOf(false) }
 
     Row(
@@ -391,7 +391,7 @@ fun questionMarkCircleButton() {
 }
 
 @Composable
-fun RotateIPButton(enabled: Boolean = true) {
+fun RotateIPButton(viewModel: MainViewModel, enabled: Boolean = true) {
     var borderColor = Color.Black
     var textColor = Color.Black
 
@@ -400,16 +400,12 @@ fun RotateIPButton(enabled: Boolean = true) {
         textColor = Color.Gray
     }
 
-    val ap = AirplaneMode()
-
     Button(
         onClick = {
             if (!enabled) return@Button
 
             CoroutineScope(Dispatchers.IO).launch {
-                ap.enable()
-                delay(10000)
-                ap.disable()
+                viewModel.rotateIP()
             }
 
         },
@@ -444,7 +440,7 @@ fun RotateIPButton(enabled: Boolean = true) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RotationTimeDropdown(enabled: Boolean = true, modifier: Modifier = Modifier) {
+fun RotationTimeDropdown(viewModel: MainViewModel, enabled: Boolean = true, modifier: Modifier = Modifier) {
     val options: List<String> = listOf("Disabled", "1 min", "3 min", "5 min", "10 min", "15 min", "30 min")
     var expanded = rememberSaveable() { mutableStateOf(false) }
     val textFieldState = rememberTextFieldState(options[0])
@@ -460,12 +456,6 @@ fun RotationTimeDropdown(enabled: Boolean = true, modifier: Modifier = Modifier)
         errorLabelColor = red,
         errorBorderColor = red
     )
-//    if (!enabled) {
-//        colors = OutlinedTextFieldDefaults.colors(
-//            disabledTextColor = colors.unfocusedTextColor,
-//            disabledLabelColor = colors.unfocusedLabelColor,
-//        )
-//    }
 
     val focusManager = LocalFocusManager.current
     val coroutineScope = rememberCoroutineScope()
@@ -506,6 +496,7 @@ fun RotationTimeDropdown(enabled: Boolean = true, modifier: Modifier = Modifier)
                         expanded.value = false
                         coroutineScope.launch {
                             focusManager.clearFocus()
+                            viewModel.setIPRotationInterval(option)
                         }
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
