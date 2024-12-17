@@ -21,7 +21,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import java.util.concurrent.atomic.AtomicBoolean
 
 
 @AndroidEntryPoint
@@ -39,16 +38,12 @@ class ConnectionService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
-    private lateinit var proxyManager: Manager;
-
-    // If a disconnect happens and it was the result of an error or temporary
-    // loss of internet connection, and not at the request of the user,
-    // we will attempt to automatically reconnect.
-    private var disconnectRequestedByUser = AtomicBoolean(false);
+    private var proxyManager: Manager? = null
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+        setupProxyManager()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -66,10 +61,12 @@ class ConnectionService : Service() {
 
         startForeground(1, notification)
 
-        setupProxyManager()
+        // need to re-register since it is unregistered when 'onDestroy' is called
+        registerOnDisconnectCallback()
+
         connect()
 
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun setupProxyManager() {
@@ -83,7 +80,12 @@ class ConnectionService : Service() {
 
         proxyManager = newManager(pid, "55", androidApiVersion, cpuArch)
 
-        proxyManager.registerOnConnectCallback {
+        proxyManager!!.registerOnLogEntryCallback { msg ->
+            Log.d(TAG, "logEntryCallback msg: $msg")
+            connectionRepo.addLogMessage(msg)
+        }
+
+        proxyManager!!.registerOnConnectCallback {
 
             connectionRepo.updateConnectionStatus(ConnectionStatus.Connected)
             Log.d(TAG, "registerOnConnectCallback called")
@@ -98,32 +100,35 @@ class ConnectionService : Service() {
             }
         }
 
-        proxyManager.registerOnDisconnectCallback {
+        registerOnDisconnectCallback()
+
+    }
+
+    private fun registerOnDisconnectCallback() {
+        // This callback is only called if we are involuntarily disconnected. The reason is
+        // that in the 'onDestroy' method of this service, we call 'unregisterOnDisconnectCallback'
+        // before calling 'disconnect'
+        proxyManager!!.registerOnDisconnectCallback {
             connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
             Log.d(TAG, "registerOnDisconnectCallback called")
 
-            if (!disconnectRequestedByUser.get()) {
-                // We were involuntarily disconnected for some reason. Perhaps an error occurred.
-                // Try to reconnect
-                serviceScope.launch {
-                    // Wait 5 seconds so that we don't end up with an infinite tight loop
-                    connectionRepo.addLogMessage("Will attempt to reconnect in 5 seconds")
-                    delay(5000L)
+            // We were involuntarily disconnected for some reason. Perhaps an error occurred.
+            // Try to reconnect
+            serviceScope.launch {
+                // Wait 5 seconds so that we don't end up with an infinite tight loop
+                connectionRepo.addLogMessage("Will attempt to reconnect in 5 seconds")
+                delay(5000L)
 
-                    val connectionStatus = connectionRepo.connectionStatus.value
-                    if (connectionStatus != ConnectionStatus.Disconnected) {
-                        // The user manually reconnected before we could perform auto reconnect
-                        return@launch
-                    }
-
-                    connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
-                    connect()
+                val connectionStatus = connectionRepo.connectionStatus.value
+                if (connectionStatus != ConnectionStatus.Disconnected) {
+                    // The user manually reconnected before we could perform auto reconnect
+                    return@launch
                 }
-            }
-        }
 
-        proxyManager.registerOnLogEntryCallback { msg ->
-            connectionRepo.addLogMessage(msg)
+                connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
+                connect()
+            }
+
         }
     }
 
@@ -133,12 +138,11 @@ class ConnectionService : Service() {
         // there's a timeout after which an err is returned.
         serviceScope.launch {
             try {
-                proxyManager.connect(BuildConfig.SERVER_IP, 443, connectionRepo.deviceID.value, connectionRepo.username.value)
+                proxyManager!!.connect(BuildConfig.SERVER_IP, 443, connectionRepo.deviceID.value, connectionRepo.username.value)
             } catch (e: Exception) {
                 Log.d("VM", "Failed to connect")
                 connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
             }
-
         }
     }
 
@@ -167,10 +171,10 @@ class ConnectionService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("connection service", "onDestroy called")
-        disconnectRequestedByUser.set(true)
-        if (::proxyManager.isInitialized) {
-            proxyManager.disconnect()
-        }
+
+        proxyManager?.unregisterOnDisconnectCallback()
+        proxyManager?.disconnect()
+
     }
 
     private fun createNotificationChannel() {

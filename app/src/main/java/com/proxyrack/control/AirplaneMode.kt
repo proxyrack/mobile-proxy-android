@@ -34,9 +34,4 @@ class AirplaneMode {
 
     }
 
-    suspend fun toggleOnOff() {
-        enable()
-        delay(1000)
-        disable()
-    }
 }

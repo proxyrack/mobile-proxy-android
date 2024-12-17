@@ -19,7 +19,7 @@ class MainViewModel @Inject constructor(
     private val settingsRepo: SettingsRepo,
     private val connectionRepo: ConnectionRepo): AndroidViewModel(application) {
 
-    private val ipRotator = IPRotator()
+    private val ipRotator = IPRotator(application, connectionRepo)
 
     val username: StateFlow<String>
         get() = connectionRepo.username
@@ -52,6 +52,9 @@ class MainViewModel @Inject constructor(
         Log.d(javaClass.simpleName, "saved username: $savedUsername saved deviceID: $savedDeviceID")
         connectionRepo.updateUsername(savedUsername)
         connectionRepo.updateDeviceID(savedDeviceID)
+
+        val rotationIntervalText = settingsRepo.ipRotationInterval.get()
+        setIPRotationInterval(rotationIntervalText)
     }
 
     suspend fun saveUsername(username: String) {
@@ -67,14 +70,18 @@ class MainViewModel @Inject constructor(
     suspend fun setIPRotationInterval(text: String) {
 
         val rotationInterval = parseFirstCharacterToInt(text)
-        if (rotationInterval > 0) {
-            ipRotator.setRotationInterval(rotationInterval)
-        } else {
-            ipRotator.disableRotationInterval()
+        ipRotator.setRotationInterval(rotationInterval)
+
+        if (connectionRepo.connectionStatus.value == ConnectionStatus.Connecting || connectionRepo.connectionStatus.value == ConnectionStatus.Connected) {
+            ipRotator.startRotationJob()
         }
 
         // save to preferences
         settingsRepo.ipRotationInterval.set(text)
+    }
+
+    suspend fun savedIPRotationIntervalText(): String {
+        return settingsRepo.ipRotationInterval.get()
     }
 
     fun rotateIP() {
@@ -84,10 +91,16 @@ class MainViewModel @Inject constructor(
     fun connectionButtonClicked() {
         when (connectionStatus.value) {
             ConnectionStatus.Connecting -> return
-            ConnectionStatus.Connected -> disconnect()
+            ConnectionStatus.Connected -> {
+                ipRotator.stopRotationJob()
+                disconnect()
+            }
             ConnectionStatus.Disconnected -> {
                 connectionRepo.addLogMessage("Connecting...")
                 connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
+                if (connectionRepo.connectionStatus.value == ConnectionStatus.Connecting || connectionRepo.connectionStatus.value == ConnectionStatus.Connected) {
+                    ipRotator.startRotationJob()
+                }
                 connect()
             }
         }
@@ -103,6 +116,7 @@ class MainViewModel @Inject constructor(
         val context = getApplication<Application>().applicationContext
         val serviceIntent = Intent(context, ConnectionService::class.java)
         context.stopService(serviceIntent)
+        connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
     }
 
 }

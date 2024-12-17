@@ -445,6 +445,14 @@ fun RotationTimeDropdown(viewModel: MainViewModel, enabled: Boolean = true, modi
     var expanded = rememberSaveable() { mutableStateOf(false) }
     val textFieldState = rememberTextFieldState(options[0])
 
+    // load previously saved value
+    LaunchedEffect(Unit) {
+        val savedText = viewModel.savedIPRotationIntervalText()
+        if (savedText.isNotEmpty()) {
+            textFieldState.setTextAndPlaceCursorAtEnd(savedText)
+        }
+    }
+
     var red = Color(0xffE8132C)
     // Set colors so that even if a text field is disabled, it will
     // have the same colors as an enabled text field.

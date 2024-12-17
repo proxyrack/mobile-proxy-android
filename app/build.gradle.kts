@@ -46,7 +46,7 @@ android {
         debug {
             //applicationIdSuffix = ".debug"
             isDebuggable = true
-            buildConfigField("String", "SERVER_IP", "\"95.216.229.111\"")
+            buildConfigField("String", "SERVER_IP", "\"mobile-socket.culturegps.com\"")
             buildConfigField("String", "SENTRY_DSN", "\"\"") // Empty DSN for debug builds so that we don't send events to sentry
             manifestPlaceholders["SENTRY_DSN"] = "" // Empty DSN for debug builds
         }
