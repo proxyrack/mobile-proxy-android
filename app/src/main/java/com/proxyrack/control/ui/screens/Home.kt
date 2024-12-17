@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -52,6 +53,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -71,6 +73,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -87,12 +90,15 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.proxyrack.control.AirplaneMode
 import com.proxyrack.control.MainViewModel
 import com.proxyrack.control.R
 import com.proxyrack.control.Screen
 import com.proxyrack.control.domain.ConnectionStatus
 import com.proxyrack.control.ui.theme.poppinsFontFamily
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 var purple = Color(0xff4A28C6)
@@ -225,7 +231,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 enabled = false,
                 modifier = Modifier.padding(top = 20.dp).fillMaxWidth())
 
-            RotationRow()
+            IPRotationRow()
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -313,14 +319,40 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 }
 
 @Composable
-fun RotationRow() {
+fun IPRotationRow() {
+    val ap = AirplaneMode()
+    val isRooted = ap.isRooted()
+
+    if (!isRooted) {
+        questionMarkCircleButton()
+    } else {
+        Row(modifier = Modifier.height(20.dp)) {  } // just a spacer
+    }
+
+    // Rotation interval dropdown and "Rotate Now" button
+    Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            RotationTimeDropdown(enabled = isRooted)
+
+            RotateIPButton(enabled = isRooted)
+    }
+}
+
+@Composable
+fun questionMarkCircleButton() {
+    var showDialog = rememberSaveable { mutableStateOf(false) }
+
     Row(
         horizontalArrangement = Arrangement.End,
-        modifier = Modifier.fillMaxWidth()
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
     ) {
+        //Text("Root Required", modifier = Modifier.padding(end = 10.dp))
         IconButton(
             onClick = {
-
+                showDialog.value = true
             },
             modifier = Modifier
                 .width(30.dp)
@@ -331,51 +363,88 @@ fun RotationRow() {
             Text("?", color = Color.White)
         }
     }
-    Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
 
-            RotationTimeMenu()
-
-            Button(
-                onClick = {
-
-                },
-                colors = ButtonDefaults.buttonColors().copy(containerColor = Color.Transparent),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(55.dp)
-                    .border(
-                        border = BorderStroke(1.dp, Color.Black),
-                        shape = RoundedCornerShape(10.dp)
-                    )
-
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog.value = false
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog.value = false
+                    }
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Rotate",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text("Rotate Now", color = Color.Black, style = TextStyle(fontSize = 17.sp))
+                    Text("OK")
                 }
+            },
+            title = {
+                Text(text = "Root Required")
+            },
+            text = {
+                Text("IP rotation works by disconnecting and reconnecting to the cell tower. " +
+                        "Airplane mode can only be toggled automatically on a rooted device.")
+            }
+        )
 
+    }
+}
+
+@Composable
+fun RotateIPButton(enabled: Boolean = true) {
+    var borderColor = Color.Black
+    var textColor = Color.Black
+
+    if (!enabled) {
+        borderColor = Color(0x33232D42)
+        textColor = Color.Gray
+    }
+
+    val ap = AirplaneMode()
+
+    Button(
+        onClick = {
+            if (!enabled) return@Button
+
+            CoroutineScope(Dispatchers.IO).launch {
+                ap.enable()
+                delay(10000)
+                ap.disable()
             }
 
-
-
+        },
+        colors = ButtonDefaults.buttonColors().copy(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .border(
+                border = BorderStroke(1.dp, borderColor),
+                shape = RoundedCornerShape(15.dp)
+            )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Rotate",
+                tint = textColor,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                "Rotate Now",
+                color = textColor,
+                style = TextStyle(fontSize = 17.sp),
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RotationTimeMenu(modifier: Modifier = Modifier) {
+fun RotationTimeDropdown(enabled: Boolean = true, modifier: Modifier = Modifier) {
     val options: List<String> = listOf("Disabled", "1 min", "3 min", "5 min", "10 min", "15 min", "30 min")
     var expanded = rememberSaveable() { mutableStateOf(false) }
     val textFieldState = rememberTextFieldState(options[0])
@@ -398,15 +467,24 @@ fun RotationTimeMenu(modifier: Modifier = Modifier) {
 //        )
 //    }
 
+    val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+
     ExposedDropdownMenuBox(
         expanded = expanded.value,
-        onExpandedChange = { expanded.value = it },
+        onExpandedChange = {
+            if (enabled) {
+                expanded.value = it
+            }
+       },
     ) {
         OutlinedTextField(
             // The `menuAnchor` modifier must be passed to the text field to handle
             // expanding/collapsing the menu on click. A read-only text field has
             // the anchor type `PrimaryNotEditable`.
-            modifier = modifier.width(150.dp).menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            modifier = modifier
+                .width(150.dp)
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
             state = textFieldState,
             readOnly = true,
             lineLimits = TextFieldLineLimits.SingleLine,
@@ -414,6 +492,7 @@ fun RotationTimeMenu(modifier: Modifier = Modifier) {
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value) },
             colors = colors,
             shape = RoundedCornerShape(14.dp),
+            enabled = enabled,
         )
         ExposedDropdownMenu(
             expanded = expanded.value,
@@ -425,6 +504,9 @@ fun RotationTimeMenu(modifier: Modifier = Modifier) {
                     onClick = {
                         textFieldState.setTextAndPlaceCursorAtEnd(option)
                         expanded.value = false
+                        coroutineScope.launch {
+                            focusManager.clearFocus()
+                        }
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                 )
