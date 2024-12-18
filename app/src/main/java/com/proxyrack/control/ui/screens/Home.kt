@@ -1,5 +1,6 @@
 package com.proxyrack.control.ui.screens
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
@@ -12,17 +13,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -36,7 +34,6 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -50,12 +47,13 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -71,9 +69,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -95,10 +91,8 @@ import com.proxyrack.control.MainViewModel
 import com.proxyrack.control.R
 import com.proxyrack.control.Screen
 import com.proxyrack.control.domain.ConnectionStatus
-import com.proxyrack.control.ui.theme.poppinsFontFamily
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 var purple = Color(0xff4A28C6)
@@ -303,11 +297,15 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 )
             }
 
+            var showBottomSheet = remember { mutableStateOf(false) }
+
             val logMessages by viewModel.logMessages.collectAsState()
             LogsColumn(
-                title = "Logs",
                 logMessages = logMessages,
+                showBottomSheet,
             )
+
+            LogsBottomSheet(logMessages, showBottomSheet)
         }
     }
 
@@ -644,9 +642,9 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
 
 @Composable
 fun LogsColumn(
-    title: String,
-    modifier: Modifier = Modifier,
     logMessages: List<String>,
+    showBottomSheet: MutableState<Boolean>,
+    modifier: Modifier = Modifier,
 ) {
     // Create a LazyListState to control the scroll position
     val listState = rememberLazyListState()
@@ -709,12 +707,27 @@ fun LogsColumn(
                 color = Color(0x66232D42),
                 modifier = Modifier.padding(start = 15.dp),
                 )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = "Downward Carrot",
-                tint = grey,
-                modifier = Modifier.padding(end = 5.dp)
-            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.open_in_full_24px),
+                    contentDescription = "Open in full",
+                    tint = grey,
+                    modifier = Modifier.padding(end = 5.dp).clickable {
+                        showBottomSheet.value = true
+                    }.size(20.dp)
+                )
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Downward Carrot",
+                    tint = grey,
+                    modifier = Modifier.padding(end = 5.dp)
+                )
+            }
+
         }
         LazyColumn(
             state = listState,
@@ -724,15 +737,77 @@ fun LogsColumn(
 
         ) {
             itemsIndexed(logMessages) { index, msg ->
-                //val topPadding = if (index == 0) 15.dp else 0.dp
                 Text(msg, modifier = Modifier.padding(
-                    //top = topPadding,
                     start = 10.dp,
                     end = 10.dp))
             }
         }
     }
 
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LogsBottomSheet(logMessages: List<String>, showBottomSheet: MutableState<Boolean>) {
+    val sheetState = rememberModalBottomSheetState()
+
+    // Create a LazyListState to control the scroll position
+    val listState = rememberLazyListState()
+
+    // Launch a coroutine to scroll to the bottom whenever items change
+    LaunchedEffect(logMessages.size) {
+        // Scroll to the last item
+        if (logMessages.isNotEmpty()) {
+            listState.animateScrollToItem(logMessages.size - 1)
+        }
+    }
+
+    Scaffold(
+
+    ) { contentPadding ->
+        if (showBottomSheet.value) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet.value = false
+                },
+                sheetState = sheetState
+            ) {
+
+                val grey = Color(0x33232D42)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
+                            val strokeWidth = 1.dp.toPx() // Border thickness
+                            val y = size.height - strokeWidth / 2 // Position the line at the bottom
+                            drawLine(
+                                color = grey,
+                                start = androidx.compose.ui.geometry.Offset(0f, y),
+                                end = androidx.compose.ui.geometry.Offset(size.width, y),
+                                strokeWidth = strokeWidth
+                            )
+                        }
+                ) {
+                    Text("Logs", modifier = Modifier.padding(start = 20.dp, bottom = 5.dp))
+                }
+
+                    LazyColumn(
+                        state = listState,
+                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                        modifier = Modifier.fillMaxWidth()
+
+                    ) {
+                        itemsIndexed(logMessages) { index, msg ->
+                            Text(msg, modifier = Modifier.padding(
+                                start = 20.dp,
+                                end = 20.dp))
+                        }
+                    }
+
+            }
+        }
+    }
 }
 
 @Composable
