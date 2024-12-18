@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.proxyrack.control"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.proxyrack.control"
@@ -46,7 +46,7 @@ android {
         debug {
             //applicationIdSuffix = ".debug"
             isDebuggable = true
-            buildConfigField("String", "SERVER_IP", "\"95.216.229.111\"")
+            buildConfigField("String", "SERVER_IP", "\"mobile-socket.culturegps.com\"")
             buildConfigField("String", "SENTRY_DSN", "\"\"") // Empty DSN for debug builds so that we don't send events to sentry
             manifestPlaceholders["SENTRY_DSN"] = "" // Empty DSN for debug builds
         }
@@ -66,6 +66,7 @@ android {
 
 dependencies {
     implementation(files("libs/android_lib_emulator.aar"))
+    implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.posthog.android)
     implementation(libs.retrofit2.retrofit)

@@ -1,9 +1,10 @@
 package com.proxyrack.control.ui.screens
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,35 +13,46 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -56,7 +68,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
@@ -74,11 +85,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.proxyrack.control.AirplaneMode
 import com.proxyrack.control.MainViewModel
 import com.proxyrack.control.R
 import com.proxyrack.control.Screen
 import com.proxyrack.control.domain.ConnectionStatus
-import com.proxyrack.control.ui.theme.poppinsFontFamily
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -87,6 +99,9 @@ var purple = Color(0xff4A28C6)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val coroutineScope = rememberCoroutineScope()
+    var scrollState = rememberScrollState()
+    var showBottomSheet = remember { mutableStateOf(false) }
+    val logMessages by viewModel.logMessages.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -94,14 +109,14 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
         // Main Content
         Column(
-            modifier = Modifier.padding(20.dp).fillMaxSize(),
-            //horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp).fillMaxSize().verticalScroll(scrollState),
         ) {
             Text(
                 "Mobile Proxy Control",
                 fontWeight = FontWeight.W700,
                 fontSize = 20.sp,
                 color = purple,
+                modifier = Modifier.padding(top = 20.dp)
             )
 
             var keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current;
@@ -212,6 +227,8 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 enabled = false,
                 modifier = Modifier.padding(top = 20.dp).fillMaxWidth())
 
+            IPRotationRow(viewModel)
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -233,7 +250,6 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                         .background(lineColor)
                 )
             }
-
 
             val buttonColor = when (connectionStatus) {
                 ConnectionStatus.Connecting -> colorFromHex("#4A28C6")
@@ -283,20 +299,211 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 )
             }
 
-            val logMessages by viewModel.logMessages.collectAsState()
-            LogsColumn(
-                title = "Logs",
-                logMessages = logMessages,
-            )
+            LogsButton(showBottomSheet)
+
         }
-    }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-
-
+        LogsBottomSheet(logMessages, showBottomSheet)
     }
 
 }
+
+@Composable
+fun IPRotationRow(viewModel: MainViewModel) {
+    val ap = AirplaneMode()
+    val isRooted = ap.isRooted()
+
+    if (!isRooted) {
+        QuestionMarkCircleButton()
+    } else {
+        Row(modifier = Modifier.height(20.dp)) {  } // just a spacer
+    }
+
+    // Rotation interval dropdown and "Rotate Now" button
+    Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            RotationTimeDropdown(viewModel, enabled = isRooted)
+
+            RotateIPButton(viewModel, enabled = isRooted)
+    }
+}
+
+@Composable
+fun QuestionMarkCircleButton() {
+    var showDialog = rememberSaveable { mutableStateOf(false) }
+
+    Row(
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+    ) {
+        //Text("Root Required", modifier = Modifier.padding(end = 10.dp))
+        IconButton(
+            onClick = {
+                showDialog.value = true
+            },
+            modifier = Modifier
+                .width(30.dp)
+                .height(30.dp)
+                .background(color = Color(0xff232D42), shape = CircleShape)
+                .clip(CircleShape)
+        ) {
+            Text("?", color = Color.White)
+        }
+    }
+
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog.value = false
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDialog.value = false
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            title = {
+                Text(text = "Root Required")
+            },
+            text = {
+                Text("IP rotation works by disconnecting and reconnecting to the cell tower. " +
+                        "Airplane mode can only be toggled automatically on a rooted device.")
+            }
+        )
+
+    }
+}
+
+@Composable
+fun RotateIPButton(viewModel: MainViewModel, enabled: Boolean = true) {
+    var borderColor = Color.Black
+    var textColor = Color.Black
+
+    if (!enabled) {
+        borderColor = Color(0x33232D42)
+        textColor = Color.Gray
+    }
+
+    Button(
+        onClick = {
+            if (!enabled) return@Button
+
+            CoroutineScope(Dispatchers.IO).launch {
+                viewModel.rotateIP()
+            }
+
+        },
+        colors = ButtonDefaults.buttonColors().copy(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .border(
+                border = BorderStroke(1.dp, borderColor),
+                shape = RoundedCornerShape(15.dp)
+            )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Rotate",
+                tint = textColor,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                "Rotate Now",
+                color = textColor,
+                style = TextStyle(fontSize = 17.sp),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RotationTimeDropdown(viewModel: MainViewModel, enabled: Boolean = true, modifier: Modifier = Modifier) {
+    val options: List<String> = listOf("Disabled", "1 min", "3 min", "5 min", "10 min", "15 min", "30 min")
+    var expanded = rememberSaveable() { mutableStateOf(false) }
+    val textFieldState = rememberTextFieldState(options[0])
+
+    // load previously saved value
+    LaunchedEffect(Unit) {
+        val savedText = viewModel.savedIPRotationIntervalText()
+        if (savedText.isNotEmpty()) {
+            textFieldState.setTextAndPlaceCursorAtEnd(savedText)
+        }
+    }
+
+    var red = Color(0xffE8132C)
+    // Set colors so that even if a text field is disabled, it will
+    // have the same colors as an enabled text field.
+    var colors = OutlinedTextFieldDefaults.colors(
+        unfocusedBorderColor = Color(0x33232D42),
+        focusedBorderColor = purple,
+        focusedLabelColor = purple,
+        unfocusedLabelColor = Color(0x99232D42),
+        errorLabelColor = red,
+        errorBorderColor = red
+    )
+
+    val focusManager = LocalFocusManager.current
+    val coroutineScope = rememberCoroutineScope()
+
+    ExposedDropdownMenuBox(
+        expanded = expanded.value,
+        onExpandedChange = {
+            if (enabled) {
+                expanded.value = it
+            }
+       },
+    ) {
+        OutlinedTextField(
+            // The `menuAnchor` modifier must be passed to the text field to handle
+            // expanding/collapsing the menu on click. A read-only text field has
+            // the anchor type `PrimaryNotEditable`.
+            modifier = modifier
+                .width(150.dp)
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+            state = textFieldState,
+            readOnly = true,
+            lineLimits = TextFieldLineLimits.SingleLine,
+            label = { Text("IP Rotation Interval") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded.value) },
+            colors = colors,
+            shape = RoundedCornerShape(14.dp),
+            enabled = enabled,
+        )
+        ExposedDropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false },
+        ) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(option, style = MaterialTheme.typography.bodyLarge) },
+                    onClick = {
+                        textFieldState.setTextAndPlaceCursorAtEnd(option)
+                        expanded.value = false
+                        coroutineScope.launch {
+                            focusManager.clearFocus()
+                            viewModel.setIPRotationInterval(option)
+                        }
+                    },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                )
+            }
+        }
+    }
+}
+
 
 @Composable
 fun Header(navController: NavController, viewModel: MainViewModel) {
@@ -397,12 +604,10 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
     val textColor = Color(0x66232D42)
 
     val annotatedString = buildAnnotatedString {
-        pushStringAnnotation(tag = "link", annotation = "https://proxyrack.com/mobile-proxies/")
+        pushStringAnnotation(tag = "link", annotation = "https://www.proxyrack.com/mobile-proxy/")
         withStyle(
-            // It seems the underline style is being overridden somehow.
-            // When the app is opened in the emulator, the underline is visible for a split second.
             style = SpanStyle(
-                color = textColor,//aterialTheme.colorScheme.primary,
+                color = textColor,
                 textDecoration = TextDecoration.Underline,
                 fontSize = 16.sp,
             )
@@ -426,11 +631,55 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LogsColumn(
-    title: String,
-    modifier: Modifier = Modifier,
-    logMessages: List<String>,
+fun LogsButton(
+    showBottomSheet: MutableState<Boolean>,
 ) {
+
+    val grey = Color(0x33232D42)
+
+    Column(
+        modifier = Modifier.padding(top = 20.dp)
+            .border(
+                width = 1.dp,
+                color = grey,
+                shape = RoundedCornerShape(5.dp)
+            )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .height(50.dp)
+                .fillMaxWidth()
+                .clickable {
+                    //expanded.value = !expanded.value
+                    showBottomSheet.value = true
+                }
+        ) {
+            Text("Logs",
+                color = Color(0x66232D42),
+                modifier = Modifier.padding(start = 15.dp),
+                )
+
+            Icon(
+                painter = painterResource(id = R.drawable.open_in_full_24px),
+                contentDescription = "Open in full",
+                tint = grey,
+                modifier = Modifier.padding(end = 15.dp).size(20.dp)
+            )
+
+        }
+
+    }
+
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LogsBottomSheet(logMessages: List<String>, showBottomSheet: MutableState<Boolean>) {
+    val sheetState = rememberModalBottomSheetState()
+
     // Create a LazyListState to control the scroll position
     val listState = rememberLazyListState()
 
@@ -442,35 +691,22 @@ fun LogsColumn(
         }
     }
 
-    val grey = Color(0x33232D42)
-    var expanded = rememberSaveable() { mutableStateOf(false) }
+    Scaffold(
 
-    Column(
-        modifier = Modifier.padding(top = 20.dp)
-            .border(
-                width = 1.dp,
-                color = grey,
-                shape = RoundedCornerShape(5.dp)
-            )
-            .animateContentSize()
-            .then(
-                if (expanded.value) {
-                    Modifier.fillMaxHeight() // Fill the maximum available height when expanded
-                } else {
-                    Modifier.height(50.dp) // Use a fixed height when not expanded
-                }
-            )
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .height(50.dp)
-                .fillMaxWidth()
-                // Draw a border on only the bottom of the row
-                .then(
-                    if (expanded.value) {
-                        Modifier.drawBehind {
+    ) { contentPadding ->
+        if (showBottomSheet.value) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    showBottomSheet.value = false
+                },
+                sheetState = sheetState
+            ) {
+
+                val grey = Color(0x33232D42)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
                             val strokeWidth = 1.dp.toPx() // Border thickness
                             val y = size.height - strokeWidth / 2 // Position the line at the bottom
                             drawLine(
@@ -480,42 +716,26 @@ fun LogsColumn(
                                 strokeWidth = strokeWidth
                             )
                         }
-                    } else {
-                        Modifier
-                    }
-                )
-                .clickable {
-                    expanded.value = !expanded.value
+                ) {
+                    Text("Logs", modifier = Modifier.padding(start = 20.dp, bottom = 5.dp))
                 }
-        ) {
-            Text("Logs",
-                color = Color(0x66232D42),
-                modifier = Modifier.padding(start = 15.dp),
-                )
-            Icon(
-                imageVector = Icons.Default.ArrowDropDown,
-                contentDescription = "Downward Carrot",
-                tint = grey,
-                modifier = Modifier.padding(end = 5.dp)
-            )
-        }
-        LazyColumn(
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-            modifier = modifier
-                .fillMaxWidth()
 
-        ) {
-            itemsIndexed(logMessages) { index, msg ->
-                //val topPadding = if (index == 0) 15.dp else 0.dp
-                Text(msg, modifier = Modifier.padding(
-                    //top = topPadding,
-                    start = 10.dp,
-                    end = 10.dp))
+                    LazyColumn(
+                        state = listState,
+                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                        modifier = Modifier.fillMaxWidth()
+
+                    ) {
+                        itemsIndexed(logMessages) { index, msg ->
+                            Text(msg, modifier = Modifier.padding(
+                                start = 20.dp,
+                                end = 20.dp))
+                        }
+                    }
+
             }
         }
     }
-
 }
 
 @Composable

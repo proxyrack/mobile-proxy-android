@@ -13,6 +13,7 @@
 - **Easy Setup**: Get up and running in under 2 minutes, with minimal configuration needed.
 - **Web Dashboard**: View and manage all connected devices from a single, intuitive interface.
 - **Location Flexibility**: Connect from various locations worldwide, ideal for bypassing geo-restrictions and enhancing privacy.
+- **IP Auto Rotation**: Automatically rotate IPs at your chosen interval. (requires a rooted device)
 
 ## Getting Started
 
