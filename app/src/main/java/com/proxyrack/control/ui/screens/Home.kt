@@ -604,12 +604,10 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
     val textColor = Color(0x66232D42)
 
     val annotatedString = buildAnnotatedString {
-        pushStringAnnotation(tag = "link", annotation = "https://proxyrack.com/mobile-proxies/")
+        pushStringAnnotation(tag = "link", annotation = "https://www.proxyrack.com/mobile-proxy/")
         withStyle(
-            // It seems the underline style is being overridden somehow.
-            // When the app is opened in the emulator, the underline is visible for a split second.
             style = SpanStyle(
-                color = textColor,//aterialTheme.colorScheme.primary,
+                color = textColor,
                 textDecoration = TextDecoration.Underline,
                 fontSize = 16.sp,
             )
