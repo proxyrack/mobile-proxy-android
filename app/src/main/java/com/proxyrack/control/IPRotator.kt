@@ -1,6 +1,5 @@
 package com.proxyrack.control
 
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat

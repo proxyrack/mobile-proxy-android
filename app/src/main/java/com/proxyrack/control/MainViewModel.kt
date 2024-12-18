@@ -85,6 +85,10 @@ class MainViewModel @Inject constructor(
     }
 
     fun rotateIP() {
+        if (connectionRepo.connectionStatus.value != ConnectionStatus.Connected) {
+            return
+        }
+
         ipRotator.rotate()
     }
 
@@ -98,9 +102,7 @@ class MainViewModel @Inject constructor(
             ConnectionStatus.Disconnected -> {
                 connectionRepo.addLogMessage("Connecting...")
                 connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
-                if (connectionRepo.connectionStatus.value == ConnectionStatus.Connecting || connectionRepo.connectionStatus.value == ConnectionStatus.Connected) {
-                    ipRotator.startRotationJob()
-                }
+                ipRotator.startRotationJob()
                 connect()
             }
         }
