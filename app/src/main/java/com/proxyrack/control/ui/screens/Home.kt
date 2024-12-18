@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
@@ -32,8 +31,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -100,6 +99,9 @@ var purple = Color(0xff4A28C6)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val coroutineScope = rememberCoroutineScope()
+    var scrollState = rememberScrollState()
+    var showBottomSheet = remember { mutableStateOf(false) }
+    val logMessages by viewModel.logMessages.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -107,14 +109,14 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
         // Main Content
         Column(
-            modifier = Modifier.padding(20.dp).fillMaxSize(),
-            //horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp).fillMaxSize().verticalScroll(scrollState),
         ) {
             Text(
                 "Mobile Proxy Control",
                 fontWeight = FontWeight.W700,
                 fontSize = 20.sp,
                 color = purple,
+                modifier = Modifier.padding(top = 20.dp)
             )
 
             var keyboardController: SoftwareKeyboardController? = LocalSoftwareKeyboardController.current;
@@ -297,21 +299,11 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 )
             }
 
-            var showBottomSheet = remember { mutableStateOf(false) }
+            LogsButton(showBottomSheet)
 
-            val logMessages by viewModel.logMessages.collectAsState()
-            LogsColumn(
-                logMessages = logMessages,
-                showBottomSheet,
-            )
-
-            LogsBottomSheet(logMessages, showBottomSheet)
         }
-    }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-
-
+        LogsBottomSheet(logMessages, showBottomSheet)
     }
 
 }
@@ -641,24 +633,11 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LogsColumn(
-    logMessages: List<String>,
+fun LogsButton(
     showBottomSheet: MutableState<Boolean>,
-    modifier: Modifier = Modifier,
 ) {
-    // Create a LazyListState to control the scroll position
-    val listState = rememberLazyListState()
-
-    // Launch a coroutine to scroll to the bottom whenever items change
-    LaunchedEffect(logMessages.size) {
-        // Scroll to the last item
-        if (logMessages.isNotEmpty()) {
-            listState.animateScrollToItem(logMessages.size - 1)
-        }
-    }
 
     val grey = Color(0x33232D42)
-    var expanded = rememberSaveable() { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.padding(top = 20.dp)
@@ -667,14 +646,6 @@ fun LogsColumn(
                 color = grey,
                 shape = RoundedCornerShape(5.dp)
             )
-            .animateContentSize()
-            .then(
-                if (expanded.value) {
-                    Modifier.fillMaxHeight() // Fill the maximum available height when expanded
-                } else {
-                    Modifier.height(50.dp) // Use a fixed height when not expanded
-                }
-            )
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -682,25 +653,9 @@ fun LogsColumn(
             modifier = Modifier
                 .height(50.dp)
                 .fillMaxWidth()
-                // Draw a border on only the bottom of the row
-                .then(
-                    if (expanded.value) {
-                        Modifier.drawBehind {
-                            val strokeWidth = 1.dp.toPx() // Border thickness
-                            val y = size.height - strokeWidth / 2 // Position the line at the bottom
-                            drawLine(
-                                color = grey,
-                                start = androidx.compose.ui.geometry.Offset(0f, y),
-                                end = androidx.compose.ui.geometry.Offset(size.width, y),
-                                strokeWidth = strokeWidth
-                            )
-                        }
-                    } else {
-                        Modifier
-                    }
-                )
                 .clickable {
-                    expanded.value = !expanded.value
+                    //expanded.value = !expanded.value
+                    showBottomSheet.value = true
                 }
         ) {
             Text("Logs",
@@ -708,40 +663,15 @@ fun LogsColumn(
                 modifier = Modifier.padding(start = 15.dp),
                 )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.open_in_full_24px),
-                    contentDescription = "Open in full",
-                    tint = grey,
-                    modifier = Modifier.padding(end = 5.dp).clickable {
-                        showBottomSheet.value = true
-                    }.size(20.dp)
-                )
-                Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Downward Carrot",
-                    tint = grey,
-                    modifier = Modifier.padding(end = 5.dp)
-                )
-            }
+            Icon(
+                painter = painterResource(id = R.drawable.open_in_full_24px),
+                contentDescription = "Open in full",
+                tint = grey,
+                modifier = Modifier.padding(end = 15.dp).size(20.dp)
+            )
 
         }
-        LazyColumn(
-            state = listState,
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-            modifier = modifier
-                .fillMaxWidth()
 
-        ) {
-            itemsIndexed(logMessages) { index, msg ->
-                Text(msg, modifier = Modifier.padding(
-                    start = 10.dp,
-                    end = 10.dp))
-            }
-        }
     }
 
 }
