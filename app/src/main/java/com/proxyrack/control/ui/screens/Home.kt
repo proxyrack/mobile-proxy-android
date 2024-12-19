@@ -85,10 +85,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.proxyrack.control.AirplaneMode
-import com.proxyrack.control.MainViewModel
+import com.proxyrack.control.domain.AirplaneMode
 import com.proxyrack.control.R
-import com.proxyrack.control.Screen
+import com.proxyrack.control.ui.navigation.Screen
 import com.proxyrack.control.domain.ConnectionStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -97,7 +96,7 @@ import kotlinx.coroutines.launch
 var purple = Color(0xff4A28C6)
 
 @Composable
-fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
+fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
     val coroutineScope = rememberCoroutineScope()
     var scrollState = rememberScrollState()
     var showBottomSheet = remember { mutableStateOf(false) }
@@ -309,7 +308,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 }
 
 @Composable
-fun IPRotationRow(viewModel: MainViewModel) {
+fun IPRotationRow(viewModel: HomeViewModel) {
     val ap = AirplaneMode()
     val isRooted = ap.isRooted()
 
@@ -381,7 +380,7 @@ fun QuestionMarkCircleButton() {
 }
 
 @Composable
-fun RotateIPButton(viewModel: MainViewModel, enabled: Boolean = true) {
+fun RotateIPButton(viewModel: HomeViewModel, enabled: Boolean = true) {
     var borderColor = Color.Black
     var textColor = Color.Black
 
@@ -430,7 +429,7 @@ fun RotateIPButton(viewModel: MainViewModel, enabled: Boolean = true) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RotationTimeDropdown(viewModel: MainViewModel, enabled: Boolean = true, modifier: Modifier = Modifier) {
+fun RotationTimeDropdown(viewModel: HomeViewModel, enabled: Boolean = true, modifier: Modifier = Modifier) {
     val options: List<String> = listOf("Disabled", "1 min", "3 min", "5 min", "10 min", "15 min", "30 min")
     var expanded = rememberSaveable() { mutableStateOf(false) }
     val textFieldState = rememberTextFieldState(options[0])
@@ -506,7 +505,7 @@ fun RotationTimeDropdown(viewModel: MainViewModel, enabled: Boolean = true, modi
 
 
 @Composable
-fun Header(navController: NavController, viewModel: MainViewModel) {
+fun Header(navController: NavController, viewModel: HomeViewModel) {
     val connectionStatus by viewModel.connectionStatus.collectAsState()
     val painter: Painter = painterResource(id = R.drawable.header_bg)
 

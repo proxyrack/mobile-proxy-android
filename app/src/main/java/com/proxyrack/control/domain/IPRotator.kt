@@ -1,10 +1,9 @@
-package com.proxyrack.control
+package com.proxyrack.control.domain
 
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
 import com.proxyrack.control.data.repository.ConnectionRepo
-import com.proxyrack.control.domain.ConnectionStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

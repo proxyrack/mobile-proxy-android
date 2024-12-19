@@ -1,4 +1,4 @@
-package com.proxyrack.control
+package com.proxyrack.control.ui.screens
 
 import android.app.Application
 import android.content.Intent
@@ -6,7 +6,9 @@ import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import com.proxyrack.control.data.repository.ConnectionRepo
+import com.proxyrack.control.domain.ConnectionService
 import com.proxyrack.control.domain.ConnectionStatus
+import com.proxyrack.control.domain.IPRotator
 import com.proxyrack.control.domain.repository.SettingsRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
@@ -14,7 +16,7 @@ import javax.inject.Inject
 
 
 @HiltViewModel
-class MainViewModel @Inject constructor(
+class HomeViewModel @Inject constructor(
     application: Application,
     private val settingsRepo: SettingsRepo,
     private val connectionRepo: ConnectionRepo): AndroidViewModel(application) {

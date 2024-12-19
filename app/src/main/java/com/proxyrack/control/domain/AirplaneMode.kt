@@ -1,6 +1,4 @@
-package com.proxyrack.control
-
-import kotlinx.coroutines.delay
+package com.proxyrack.control.domain
 
 class AirplaneMode {
 
