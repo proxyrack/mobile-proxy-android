@@ -19,9 +19,9 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     application: Application,
     private val settingsRepo: SettingsRepo,
-    private val connectionRepo: ConnectionRepo): AndroidViewModel(application) {
-
-    private val ipRotator = IPRotator(application, connectionRepo)
+    private val connectionRepo: ConnectionRepo,
+    private val ipRotator: IPRotator,
+    ): AndroidViewModel(application) {
 
     val username: StateFlow<String>
         get() = connectionRepo.username
@@ -123,6 +123,15 @@ class HomeViewModel @Inject constructor(
         connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
     }
 
+    // Checks if phone is rooted, but not whether the app has been granted super user rights.
+    fun isRooted(): Boolean {
+        try {
+            Runtime.getRuntime().exec("su")
+        } catch (e: Exception) {
+            return false
+        }
+        return true
+    }
 }
 
 fun parseFirstCharacterToInt(input: String): Int {

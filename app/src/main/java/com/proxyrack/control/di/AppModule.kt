@@ -10,6 +10,10 @@ import com.proxyrack.control.data.repository.ConnectionRepo
 import com.proxyrack.control.data.repository.DataAccessorImpl
 import com.proxyrack.control.data.repository.IpInfoRepository
 import com.proxyrack.control.data.repository.SettingsRepoImpl
+import com.proxyrack.control.domain.AirplaneMode
+import com.proxyrack.control.domain.AirplaneModeImpl
+import com.proxyrack.control.domain.IPRotator
+import com.proxyrack.control.domain.IPRotatorImpl
 import com.proxyrack.control.domain.repository.DataAccessor
 import com.proxyrack.control.domain.repository.SettingsRepo
 import dagger.Module
@@ -101,5 +105,17 @@ object AppModule {
     @Singleton
     fun provideConnectionRepo(): ConnectionRepo {
         return ConnectionRepo()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAirplaneMode(): AirplaneMode {
+        return AirplaneModeImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideIPRotator(@ApplicationContext context: Context, ap: AirplaneMode, connRepo: ConnectionRepo): IPRotator {
+        return IPRotatorImpl(context, connRepo, ap)
     }
 }

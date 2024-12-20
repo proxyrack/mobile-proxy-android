@@ -85,7 +85,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.proxyrack.control.domain.AirplaneMode
 import com.proxyrack.control.R
 import com.proxyrack.control.ui.navigation.Screen
 import com.proxyrack.control.domain.ConnectionStatus
@@ -309,8 +308,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
 
 @Composable
 fun IPRotationRow(viewModel: HomeViewModel) {
-    val ap = AirplaneMode()
-    val isRooted = ap.isRooted()
+    val isRooted = viewModel.isRooted()
 
     if (!isRooted) {
         QuestionMarkCircleButton()
