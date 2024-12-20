@@ -1,27 +1,32 @@
 package com.proxyrack.control.domain
 
-import android.content.Context
-import android.content.Intent
-import androidx.core.content.ContextCompat
 import com.proxyrack.control.data.repository.ConnectionRepo
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class IPRotatorImpl (
-    private val context: Context,
     private val connectionRepo: ConnectionRepo,
     private val ap: AirplaneMode,
+    private val connLauncher: ConnectionServiceLauncher,
+    private val scope: CoroutineScope,
+    private val apToggleDelay: Long = 1000,
+    private val internetConnectivityDelay: Long = 10000
     ): IPRotator {
 
-    private var job: Job? = null
+    private var _job: Job? = null
+
+    override var job: Job? = null
+        get() { // for testing
+            return _job
+        }
+
     private var rotationIntervalMillis: Long = 0
 
     override fun setRotationInterval(minutes: Int) {
         if (minutes == 0) {
-            job?.cancel()
+            _job?.cancel()
         }
 
         rotationIntervalMillis = (minutes*60*1000).toLong()
@@ -33,8 +38,8 @@ class IPRotatorImpl (
             return
         }
 
-        job?.cancel()
-        job = CoroutineScope(Dispatchers.IO).launch {
+        _job?.cancel()
+        _job = scope.launch {
             while (true) {
                 delay(rotationIntervalMillis)
                 doRotation()
@@ -43,10 +48,10 @@ class IPRotatorImpl (
     }
 
     override fun rotate() {
-        val hadPendingJob = job != null
-        job?.cancel()
+        val hadPendingJob = _job != null
+        _job?.cancel()
 
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             doRotation()
 
             if (hadPendingJob) {
@@ -56,32 +61,30 @@ class IPRotatorImpl (
     }
 
     override fun stopRotationJob() {
-        job?.cancel()
+        _job?.cancel()
     }
 
     private suspend fun doRotation() {
         disconnect()
 
         ap.enable()
-        delay(1000)
+        delay(apToggleDelay)
         ap.disable()
 
         connectionRepo.addLogMessage("Waiting for internet connection")
-        delay(10000) // todo: confirm we have an internet connection
+        delay(internetConnectivityDelay) // todo: confirm we have an internet connection rather than just waiting
         connectionRepo.addLogMessage("Connecting...")
 
         connect()
     }
 
     private fun connect() {
-        val serviceIntent = Intent(context, ConnectionService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
+        connLauncher.connect()
     }
 
     private fun disconnect() {
         connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
-        val serviceIntent = Intent(context, ConnectionService::class.java)
-        context.stopService(serviceIntent)
+        connLauncher.disconnect()
     }
 }
 

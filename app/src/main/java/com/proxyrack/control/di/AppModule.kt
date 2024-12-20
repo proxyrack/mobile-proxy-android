@@ -12,6 +12,8 @@ import com.proxyrack.control.data.repository.IpInfoRepository
 import com.proxyrack.control.data.repository.SettingsRepoImpl
 import com.proxyrack.control.domain.AirplaneMode
 import com.proxyrack.control.domain.AirplaneModeImpl
+import com.proxyrack.control.domain.ConnectionServiceLauncher
+import com.proxyrack.control.domain.ConnectionServiceLauncherImpl
 import com.proxyrack.control.domain.IPRotator
 import com.proxyrack.control.domain.IPRotatorImpl
 import com.proxyrack.control.domain.repository.DataAccessor
@@ -21,6 +23,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Named
 import javax.inject.Singleton
 
@@ -115,7 +119,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideIPRotator(@ApplicationContext context: Context, ap: AirplaneMode, connRepo: ConnectionRepo): IPRotator {
-        return IPRotatorImpl(context, connRepo, ap)
+    fun provideConnServiceLauncher(@ApplicationContext context: Context): ConnectionServiceLauncher {
+        return ConnectionServiceLauncherImpl(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIPRotator(ap: AirplaneMode, connRepo: ConnectionRepo, connLauncher: ConnectionServiceLauncher): IPRotator {
+        return IPRotatorImpl(connRepo, ap, connLauncher, CoroutineScope(Dispatchers.IO))
     }
 }
