@@ -45,7 +45,7 @@ class MyApp: Application() {
 
         CoroutineScope(Dispatchers.IO).launch {
             analyticsStatusNotifier.analyticsStatus.collect { enabled ->
-                if (enabled) {
+                if (enabled && !BuildConfig.DEBUG) {
                     PostHog.optIn()
                     PostHog.capture(event = "Analytics enabled")
                     Log.i(TAG, "Analytics enabled")
