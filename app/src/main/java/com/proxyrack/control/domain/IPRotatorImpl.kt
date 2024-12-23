@@ -1,37 +1,45 @@
-package com.proxyrack.control
+package com.proxyrack.control.domain
 
-import android.content.Context
-import android.content.Intent
-import androidx.core.content.ContextCompat
 import com.proxyrack.control.data.repository.ConnectionRepo
-import com.proxyrack.control.domain.ConnectionStatus
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class IPRotator(private val context: Context, private val connectionRepo: ConnectionRepo) {
-    private val ap = AirplaneMode()
-    private var job: Job? = null
+class IPRotatorImpl (
+    private val connectionRepo: ConnectionRepo,
+    private val ap: AirplaneMode,
+    private val connLauncher: ConnectionServiceLauncher,
+    private val scope: CoroutineScope,
+    private val apToggleDelay: Long = 1000,
+    private val internetConnectivityDelay: Long = 10000
+    ): IPRotator {
+
+    private var _job: Job? = null
+
+    override var job: Job? = null
+        get() { // for testing
+            return _job
+        }
+
     private var rotationIntervalMillis: Long = 0
 
-    fun setRotationInterval(minutes: Int) {
+    override fun setRotationInterval(minutes: Int) {
         if (minutes == 0) {
-            job?.cancel()
+            _job?.cancel()
         }
 
         rotationIntervalMillis = (minutes*60*1000).toLong()
     }
 
-    fun startRotationJob() {
+    override fun startRotationJob() {
         if (rotationIntervalMillis == 0.toLong()) {
             println("rotationIntervalMillis uninitialized!!")
             return
         }
 
-        job?.cancel()
-        job = CoroutineScope(Dispatchers.IO).launch {
+        _job?.cancel()
+        _job = scope.launch {
             while (true) {
                 delay(rotationIntervalMillis)
                 doRotation()
@@ -39,11 +47,11 @@ class IPRotator(private val context: Context, private val connectionRepo: Connec
         }
     }
 
-    fun rotate() {
-        val hadPendingJob = job != null
-        job?.cancel()
+    override fun rotate() {
+        val hadPendingJob = _job != null
+        _job?.cancel()
 
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             doRotation()
 
             if (hadPendingJob) {
@@ -52,33 +60,31 @@ class IPRotator(private val context: Context, private val connectionRepo: Connec
         }
     }
 
-    fun stopRotationJob() {
-        job?.cancel()
+    override fun stopRotationJob() {
+        _job?.cancel()
     }
 
     private suspend fun doRotation() {
         disconnect()
 
         ap.enable()
-        delay(1000)
+        delay(apToggleDelay)
         ap.disable()
 
         connectionRepo.addLogMessage("Waiting for internet connection")
-        delay(10000) // todo: confirm we have an internet connection
+        delay(internetConnectivityDelay) // todo: confirm we have an internet connection rather than just waiting
         connectionRepo.addLogMessage("Connecting...")
 
         connect()
     }
 
     private fun connect() {
-        val serviceIntent = Intent(context, ConnectionService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
+        connLauncher.connect()
     }
 
     private fun disconnect() {
         connectionRepo.updateConnectionStatus(ConnectionStatus.Connecting)
-        val serviceIntent = Intent(context, ConnectionService::class.java)
-        context.stopService(serviceIntent)
+        connLauncher.disconnect()
     }
 }
 

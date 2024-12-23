@@ -1,4 +1,4 @@
-package com.proxyrack.control
+package com.proxyrack.control.ui.navigation
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")

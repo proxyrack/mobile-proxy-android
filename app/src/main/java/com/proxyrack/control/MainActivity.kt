@@ -38,7 +38,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.proxyrack.control.ui.navigation.Screen
 import com.proxyrack.control.ui.screens.HomeScreen
+import com.proxyrack.control.ui.screens.HomeViewModel
 import com.proxyrack.control.ui.screens.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -62,7 +64,7 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             ProxyControlTheme {
-                val viewModel: MainViewModel by viewModels()
+                val viewModel: HomeViewModel by viewModels()
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 var canNavigateBack by remember { mutableStateOf(false)}
@@ -185,7 +187,7 @@ class MainActivity : ComponentActivity() {
     // Checks if this is the first time the app has been run. If yes,
     // then a device ID is generated and the analytics dialog are shown.
     fun initializationTasks() {
-        val viewModel: MainViewModel by viewModels()
+        val viewModel: HomeViewModel by viewModels()
         lifecycleScope.launch(Dispatchers.IO) {
             val previouslyInitialized = viewModel.previouslyInitialized()
             if (!previouslyInitialized) {

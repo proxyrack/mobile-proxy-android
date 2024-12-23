@@ -1,4 +1,4 @@
-package com.proxyrack.control
+package com.proxyrack.control.domain
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -8,11 +8,14 @@ import android.app.Service
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.Process
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.proxyrack.control.BuildConfig
+import com.proxyrack.control.MainActivity
+import com.proxyrack.control.R
 import com.proxyrack.control.data.repository.ConnectionRepo
 import com.proxyrack.control.data.repository.IpInfoRepository
-import com.proxyrack.control.domain.ConnectionStatus
 import com.proxyrack.proxylib.android.Android.newManager
 import com.proxyrack.proxylib.android.Manager
 import dagger.hilt.android.AndroidEntryPoint
@@ -70,7 +73,7 @@ class ConnectionService : Service() {
     }
 
     private fun setupProxyManager() {
-        val pid = android.os.Process.myPid().toLong()
+        val pid = Process.myPid().toLong()
         val androidApiVersion = Build.VERSION.SDK_INT.toString()
         val cpuArch = getCPUArchitecture()
 

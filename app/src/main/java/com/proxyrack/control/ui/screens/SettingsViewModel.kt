@@ -1,4 +1,4 @@
-package com.proxyrack.control
+package com.proxyrack.control.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
