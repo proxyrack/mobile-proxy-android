@@ -6,6 +6,6 @@ interface IPRotator {
     var job: Job?
     fun setRotationInterval(minutes: Int)
     fun startRotationJob()
-    fun rotate()
+    fun rotateOffSchedule()
     fun stopRotationJob()
 }

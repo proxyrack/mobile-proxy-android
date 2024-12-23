@@ -5,6 +5,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.sync.Mutex
+import java.util.concurrent.atomic.AtomicLong
 
 class IPRotatorImpl (
     private val connectionRepo: ConnectionRepo,
@@ -15,53 +19,73 @@ class IPRotatorImpl (
     private val internetConnectivityDelay: Long = 10000
     ): IPRotator {
 
+    private val rotateCh = Channel<Unit>()
+
     private var _job: Job? = null
+    private val jobMutex = Mutex()
 
     override var job: Job? = null
         get() { // for testing
             return _job
         }
 
-    private var rotationIntervalMillis: Long = 0
+    private var rotationIntervalMillis = AtomicLong(0)
+
+    init {
+        scope.launch {
+            for (msg in rotateCh) {
+                doRotation()
+
+                // User may have disabled rotation while we were rotating.
+                // Only restart the timer if rotation is still enabled.
+                val rotationEnabled = rotationIntervalMillis.get() != 0.toLong()
+                if (rotationEnabled) {
+                    startJob()
+                }
+            }
+        }
+    }
 
     override fun setRotationInterval(minutes: Int) {
-        if (minutes == 0) {
-            _job?.cancel()
-        }
-
-        rotationIntervalMillis = (minutes*60*1000).toLong()
+        rotationIntervalMillis.set(minutes*60*1000.toLong())
     }
 
     override fun startRotationJob() {
-        if (rotationIntervalMillis == 0.toLong()) {
+        if (rotationIntervalMillis.get() == 0.toLong()) {
             println("rotationIntervalMillis uninitialized!!")
             return
         }
 
-        _job?.cancel()
-        _job = scope.launch {
-            while (true) {
-                delay(rotationIntervalMillis)
-                doRotation()
-            }
+        scope.launch {
+            startJob()
         }
     }
 
-    override fun rotate() {
-        val hadPendingJob = _job != null
-        _job?.cancel()
-
+    override fun rotateOffSchedule() {
         scope.launch {
-            doRotation()
-
-            if (hadPendingJob) {
-                startRotationJob()
+            jobMutex.withLock {
+                _job?.cancel()
             }
+            rotateCh.trySend(Unit)
         }
     }
 
     override fun stopRotationJob() {
-        _job?.cancel()
+        scope.launch {
+            jobMutex.withLock {
+                _job?.cancel()
+            }
+        }
+    }
+
+    private suspend fun startJob() {
+        jobMutex.withLock {
+            _job?.cancel()
+            _job = scope.launch {
+                delay(rotationIntervalMillis.get())
+                rotateCh.trySend(Unit)
+            }
+        }
     }
 
     private suspend fun doRotation() {

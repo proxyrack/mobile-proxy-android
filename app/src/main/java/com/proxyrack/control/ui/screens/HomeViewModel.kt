@@ -91,7 +91,7 @@ class HomeViewModel @Inject constructor(
             return
         }
 
-        ipRotator.rotate()
+        ipRotator.rotateOffSchedule()
     }
 
     fun connectionButtonClicked() {
