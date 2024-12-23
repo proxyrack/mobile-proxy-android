@@ -6,24 +6,38 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.verify
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class IPRotatorImplTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `set rotation interval to 0 and job gets canceled`() = runTest {
-        // start the job
-        val ipRotator = IPRotatorImpl(ConnectionRepo(), AirplaneModeFake(), ConnLauncherFake(), this)
-        ipRotator.setRotationInterval(1)
+    fun `rotation occurs after specified time period`() = runTest {
+        val connLauncher = mock<ConnectionServiceLauncherImpl>()
+        val ipRotator = spy(IPRotatorImpl(ConnectionRepo(), mock<AirplaneMode>(), connLauncher, this.backgroundScope, 0, 0))
+
+        ipRotator.setRotationInterval(1) // 1 minute
         ipRotator.startRotationJob()
+
+        advanceTimeBy(1000*61)
+
+        verify(connLauncher).disconnect()
+        verify(connLauncher).connect()
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `rotation stops properly`() = runTest {
+        val ipRotator = spy(IPRotatorImpl(ConnectionRepo(), mock<AirplaneMode>(), mock<ConnectionServiceLauncherImpl>(), this.backgroundScope, 0, 0))
+
+        ipRotator.setRotationInterval(1) // 1 minute
+        ipRotator.startRotationJob()
+        ipRotator.stopRotationJob()
         advanceTimeBy(1000)
 
-        // set interval to 0 and expect that the job has been canceled
-        ipRotator.setRotationInterval(0)
-        advanceUntilIdle()
         assertTrue(ipRotator.job?.isCancelled == true)
-
     }
 }
