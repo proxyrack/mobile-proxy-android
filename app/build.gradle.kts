@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.hiltAndroid)
     kotlin("kapt")
 
-    id("io.sentry.android.gradle") version "4.14.0"
+    id("io.sentry.android.gradle") version "4.14.1"
 }
 
 android {
