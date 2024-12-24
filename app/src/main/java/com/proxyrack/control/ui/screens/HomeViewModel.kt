@@ -1,12 +1,9 @@
 package com.proxyrack.control.ui.screens
 
-import android.app.Application
-import android.content.Intent
 import android.util.Log
-import androidx.core.content.ContextCompat
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import com.proxyrack.control.data.repository.ConnectionRepo
-import com.proxyrack.control.domain.ConnectionService
+import com.proxyrack.control.domain.ConnectionServiceLauncher
 import com.proxyrack.control.domain.ConnectionStatus
 import com.proxyrack.control.domain.IPRotator
 import com.proxyrack.control.domain.repository.SettingsRepo
@@ -17,11 +14,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    application: Application,
+    private val connServiceLauncher: ConnectionServiceLauncher,
     private val settingsRepo: SettingsRepo,
     private val connectionRepo: ConnectionRepo,
     private val ipRotator: IPRotator,
-    ): AndroidViewModel(application) {
+    ): ViewModel() {
 
     val username: StateFlow<String>
         get() = connectionRepo.username
@@ -73,8 +70,11 @@ class HomeViewModel @Inject constructor(
 
         val rotationInterval = parseFirstCharacterToInt(text)
         ipRotator.setRotationInterval(rotationInterval)
+        ipRotator.stopRotationJob()
 
-        if (connectionRepo.connectionStatus.value == ConnectionStatus.Connecting || connectionRepo.connectionStatus.value == ConnectionStatus.Connected) {
+        if ((connectionRepo.connectionStatus.value == ConnectionStatus.Connecting ||
+            connectionRepo.connectionStatus.value == ConnectionStatus.Connected) &&
+            rotationInterval != 0) {
             ipRotator.startRotationJob()
         }
 
@@ -111,15 +111,11 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun connect() {
-        val context = getApplication<Application>().applicationContext
-        val serviceIntent = Intent(context, ConnectionService::class.java)
-        ContextCompat.startForegroundService(context, serviceIntent)
+        connServiceLauncher.connect()
     }
 
     private fun disconnect() {
-        val context = getApplication<Application>().applicationContext
-        val serviceIntent = Intent(context, ConnectionService::class.java)
-        context.stopService(serviceIntent)
+        connServiceLauncher.disconnect()
         connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)
     }
 

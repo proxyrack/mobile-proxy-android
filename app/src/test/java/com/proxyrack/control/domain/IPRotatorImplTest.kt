@@ -4,7 +4,6 @@ import com.proxyrack.control.data.repository.ConnectionRepo
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
