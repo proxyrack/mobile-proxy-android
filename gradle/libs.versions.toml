@@ -2,6 +2,7 @@
 agp = "8.7.0"
 converterGson = "2.9.0"
 datastorePreferences = "1.1.1"
+desugar_jdk_libs = "2.1.4"
 hiltAndroid = "2.52"
 kotlin = "2.0.0"
 coreKtx = "1.10.1"
@@ -16,10 +17,12 @@ loggingInterceptor = "4.9.3"
 materialIconsCore = "1.7.6"
 mockitoCore = "5.14.2"
 mockitoKotlin = "5.4.0"
+mockwebserver = "4.12.0"
 navigationCompose = "2.8.3"
 posthogAndroid = "3.8.3"
 retrofitVersion = "2.9.0"
 androidxHiltNavigationCompose = "1.2.0"
+semver = "2.0.0"
 uiTextGoogleFonts = "1.7.5"
 material3 = "1.4.0-alpha05"
 
@@ -31,6 +34,7 @@ androidx-material-icons-core = { module = "androidx.compose.material:material-ic
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
@@ -52,8 +56,10 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "mockwebserver" }
 posthog-android = { module = "com.posthog:posthog-android", version.ref = "posthogAndroid" }
 retrofit2-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
+semver = { module = "io.github.z4kn4fein:semver", version.ref = "semver" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

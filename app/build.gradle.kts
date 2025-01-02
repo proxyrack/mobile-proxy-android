@@ -52,6 +52,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -66,6 +67,7 @@ android {
 
 dependencies {
     implementation(files("libs/android_lib_emulator.aar"))
+    implementation(libs.semver)
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.ui.text.google.fonts)
     implementation(libs.posthog.android)
@@ -100,6 +102,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.mockwebserver)
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 }
 
 kapt {
