@@ -73,7 +73,7 @@
     <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
     <!-- enable session replay -->
     <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
-    <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.1" />
+    <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.0" />
 
     </application>
 
