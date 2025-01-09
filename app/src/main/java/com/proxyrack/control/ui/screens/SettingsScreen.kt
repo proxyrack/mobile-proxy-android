@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,60 +33,72 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.proxyrack.control.BuildConfig
 import com.proxyrack.control.R
 
 
 @Composable
 fun SettingsScreen(navController: NavController, viewModel: SettingsViewModel = hiltViewModel()) {
     val windowInsetPadding = WindowInsets.statusBars.asPaddingValues()
-    Column(
-        modifier = Modifier.padding(start = 20.dp, top = windowInsetPadding.calculateTopPadding(), end = 20.dp, bottom = windowInsetPadding.calculateBottomPadding()).fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box() {
-            BackIconButton(navController)
+    Column(modifier = Modifier.fillMaxSize().padding(start = 20.dp, top = windowInsetPadding.calculateTopPadding(), end = 20.dp, bottom = windowInsetPadding.calculateBottomPadding())) {
+        Column(
+            // 'weight' allows Row with version number to actually show on the screen
+            // https://stackoverflow.com/a/71668596/6716264
+            // The children without weight are measured first. After that, the remaining space in the column is spread among the children with weights, proportional to their weight.
+            modifier = Modifier.fillMaxSize().weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box() {
+                BackIconButton(navController)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Settings",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                    )
+                }
+            }
+
+
+            //var checked by remember { mutableStateOf(true) }
+            val checked by viewModel.analyticsEnabled.collectAsState()
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth().padding(top = 30.dp)
             ) {
-                Text(
-                    "Settings",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
+                Column {
+                    Text(
+                        "Allow anonymous analytics"
+                    )
+                    Text(
+                        "No identifying data is collected.",
+                        color = Color(0x6600091F),
+                        fontSize = 14.sp,
+                    )
+                }
+                Switch(
+                    checked = checked,
+                    onCheckedChange = {
+                        viewModel.setAnalyticsEnabled(it)
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedTrackColor = Color(0xff4A28C6)
+                    )
                 )
             }
         }
-
-
-        //var checked by remember { mutableStateOf(true) }
-        val checked by viewModel.analyticsEnabled.collectAsState()
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().padding(top = 30.dp)
+
         ) {
-            Column {
-                Text(
-                    "Allow anonymous analytics"
-                )
-                Text(
-                    "No identifying data is collected.",
-                    color = Color(0x6600091F),
-                    fontSize = 14.sp,
-                )
-            }
-            Switch(
-                checked = checked,
-                onCheckedChange = {
-                    viewModel.setAnalyticsEnabled(it)
-                },
-                colors = SwitchDefaults.colors(
-                    checkedTrackColor = Color(0xff4A28C6)
-                )
-            )
+            Text("v" + BuildConfig.VERSION_NAME)
         }
     }
+
 }
 
 @Composable

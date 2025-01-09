@@ -3,7 +3,6 @@ package com.proxyrack.control
 import android.app.Application
 import android.util.Log
 import com.posthog.PostHog
-import com.posthog.PostHogInterface
 import dagger.hilt.android.HiltAndroidApp
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig

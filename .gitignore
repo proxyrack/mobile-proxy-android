@@ -14,6 +14,10 @@
 .cxx
 local.properties
 todo.txt
+index.js
+node_modules/
+package-lock.json
+package.json
 
 # Sentry Config File
 sentry.properties

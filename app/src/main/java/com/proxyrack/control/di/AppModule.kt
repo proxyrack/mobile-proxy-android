@@ -5,9 +5,14 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.proxyrack.control.BuildConfig
+import com.proxyrack.control.data.network.GithubReleasesRetrofit
+import com.proxyrack.control.data.network.GithubReleasesService
+import com.proxyrack.control.data.network.IpInfoApiService
 import com.proxyrack.control.data.repository.AnalyticsStatusNotifier
 import com.proxyrack.control.data.repository.ConnectionRepo
 import com.proxyrack.control.data.repository.DataAccessorImpl
+import com.proxyrack.control.data.repository.GithubReleasesRepoImpl
 import com.proxyrack.control.data.repository.IpInfoRepository
 import com.proxyrack.control.data.repository.SettingsRepoImpl
 import com.proxyrack.control.domain.AirplaneMode
@@ -17,7 +22,11 @@ import com.proxyrack.control.domain.ConnectionServiceLauncherImpl
 import com.proxyrack.control.domain.IPRotator
 import com.proxyrack.control.domain.IPRotatorImpl
 import com.proxyrack.control.domain.repository.DataAccessor
+import com.proxyrack.control.domain.repository.GithubReleasesRepo
 import com.proxyrack.control.domain.repository.SettingsRepo
+import com.proxyrack.control.domain.updates.APKInstallerImpl
+import com.proxyrack.control.domain.updates.UpdateManager
+import com.proxyrack.control.domain.updates.UpdateManagerImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,6 +36,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Named
 import javax.inject.Singleton
+import io.github.z4kn4fein.semver.toVersion
 
 // dagger hilt tutorial :)
 // https://youtu.be/bbMsuI2p1DQ?si=9sTHN4Lb3voI79ur
@@ -127,5 +137,18 @@ object AppModule {
     @Singleton
     fun provideIPRotator(ap: AirplaneMode, connRepo: ConnectionRepo, connLauncher: ConnectionServiceLauncher): IPRotator {
         return IPRotatorImpl(connRepo, ap, connLauncher, CoroutineScope(Dispatchers.IO))
+    }
+
+    @Provides
+    @Singleton
+    fun provideUpdateManager(@ApplicationContext context: Context): UpdateManager {
+        val repo = GithubReleasesRepoImpl(GithubReleasesRetrofit.retrofit.create(GithubReleasesService::class.java))
+
+        return UpdateManagerImpl(
+            BuildConfig.VERSION_NAME.toVersion(strict = false),
+            repo,
+            APKInstallerImpl(context),
+            context.cacheDir,
+        )
     }
 }
