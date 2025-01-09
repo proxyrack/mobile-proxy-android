@@ -74,22 +74,6 @@ class UpdateManagerImpl (
         return UpdateDetails(available = updateAvailable, version = releaseInfo.version, url)
     }
 
-    suspend fun checkForUpdateTest(): UpdateDetails {
-        val releaseInfo: ReleaseInfo
-        try {
-            releaseInfo = releasesRepo.getLatestRelease()
-        } catch (e: Exception) {
-            Log.e(javaClass.simpleName, "failed update check: $e")
-            return UpdateDetails(
-                available = false,
-                version = "",
-                url = "",
-            )
-        }
-
-        return UpdateDetails(available = true, version = releaseInfo.version, releaseInfo.url)
-    }
-
     // Recommended to pass context.getCacheDir() for storagePath
     // Tries to download update file and offer to install it.
     // @throws IOException if file fails to download

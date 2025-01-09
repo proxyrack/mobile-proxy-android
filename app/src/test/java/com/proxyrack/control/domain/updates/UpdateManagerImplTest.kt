@@ -9,6 +9,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import java.io.File
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
@@ -26,7 +27,7 @@ class UpdateManagerImplTest {
         `when`(releasesRepo.getLatestRelease()).thenReturn(ReleaseInfo("1.0.2", "update_url"))
 
         val currentVersion = "1.0.1".toVersion(strict = false)
-        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller)
+        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, File("/"))
 
         val result = manager.checkForUpdate()
         assertTrue("update should be available", result.available)
@@ -42,7 +43,7 @@ class UpdateManagerImplTest {
         `when`(releasesRepo.getLatestRelease()).thenReturn(ReleaseInfo("1.0.0", "update_url"))
 
         val currentVersion = "1.0.1".toVersion(strict = false)
-        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller)
+        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, File("/"))
 
         val result = manager.checkForUpdate()
         assertTrue("update should not be available", !result.available)
@@ -58,7 +59,7 @@ class UpdateManagerImplTest {
         `when`(releasesRepo.getLatestRelease()).thenReturn(ReleaseInfo("1.0.0", "update_url"))
 
         val currentVersion = "1.0.0".toVersion(strict = false)
-        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller)
+        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, File("/"))
 
         val result = manager.checkForUpdate()
         assertTrue("update should not be available", !result.available)
@@ -75,7 +76,7 @@ class UpdateManagerImplTest {
 
         val currentVersion = "1.0.0".toVersion(strict = false)
         val timeSource = TestTimeSource()
-        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, timeSource)
+        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, File("/"), timeSource)
 
         var result = manager.checkForUpdate()
         assertTrue("update should be available", result.available)
@@ -96,7 +97,7 @@ class UpdateManagerImplTest {
 
         val currentVersion = "1.0.0".toVersion(strict = false)
         val timeSource = TestTimeSource()
-        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, timeSource)
+        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, File("/"), timeSource)
 
         var result = manager.checkForUpdate()
         assertTrue("update should be available", result.available)
@@ -117,7 +118,7 @@ class UpdateManagerImplTest {
 
         val currentVersion = "1.0.0".toVersion(strict = false)
         val timeSource = TestTimeSource()
-        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, timeSource)
+        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, File("/"), timeSource)
 
         var result = manager.checkForUpdate()
         assertTrue("update should be available", result.available)
@@ -141,7 +142,7 @@ class UpdateManagerImplTest {
 
         val currentVersion = "1.0.0".toVersion(strict = false)
         val timeSource = TestTimeSource()
-        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, timeSource)
+        val manager = UpdateManagerImpl(currentVersion, releasesRepo, apkInstaller, File("/"), timeSource)
 
         manager.ignoreUpdate(latestVersion)
 
