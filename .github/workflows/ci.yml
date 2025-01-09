@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - easy_updates
   pull_request:
     branches:
       - master
