@@ -103,7 +103,7 @@ jobs:
 
       - name: Install semantic-release and plugins
         run: |
-          npm install semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git @semantic-release/github
+          npm install semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git @semantic-release/github semantic-release-export-data
 
       - name: Download APK
         uses: actions/download-artifact@v4
