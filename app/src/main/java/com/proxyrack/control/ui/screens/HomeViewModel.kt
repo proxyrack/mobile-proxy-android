@@ -8,7 +8,9 @@ import com.proxyrack.control.domain.ConnectionStatus
 import com.proxyrack.control.domain.IPRotator
 import com.proxyrack.control.domain.repository.SettingsRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 
@@ -34,6 +36,13 @@ class HomeViewModel @Inject constructor(
 
     val logMessages: StateFlow<List<String>>
         get() = connectionRepo.logMessages
+
+    private val _analyticsDialogShowing = MutableStateFlow<Boolean>(false)
+    val analyticsDialogShowing = _analyticsDialogShowing.asStateFlow()
+
+    fun setAnalyticsDialogShowing(v: Boolean) {
+        _analyticsDialogShowing.value = v
+    }
 
     suspend fun previouslyInitialized(): Boolean {
         return settingsRepo.initialized.get().isNotEmpty()

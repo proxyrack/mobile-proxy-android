@@ -16,6 +16,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,27 +33,41 @@ import com.proxyrack.control.ui.theme.ProxyControlTheme
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.proxyrack.control.domain.updates.UpdateManager
 import com.proxyrack.control.ui.navigation.Screen
 import com.proxyrack.control.ui.screens.HomeScreen
 import com.proxyrack.control.ui.screens.HomeViewModel
 import com.proxyrack.control.ui.screens.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
+import java.io.IOException
+import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val TAG = javaClass.simpleName
 
-    private val showAnalyticsDialog = mutableStateOf(false)
+    @Inject lateinit var updateManager: UpdateManager
+
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private var permissionResult = CompletableDeferred<Boolean>()
+
+    private lateinit var requestBatteryLauncher: ActivityResultLauncher<Intent>
+    private var batteryResult = CompletableDeferred<Unit>()
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -62,9 +77,11 @@ class MainActivity : ComponentActivity() {
             // Makes status bar icons white
             statusBarStyle = SystemBarStyle.dark(0)
         )
+
+        val viewModel: HomeViewModel by viewModels()
+
         setContent {
             ProxyControlTheme {
-                val viewModel: HomeViewModel by viewModels()
                 val navController = rememberNavController()
                 val backStackEntry by navController.currentBackStackEntryAsState()
                 var canNavigateBack by remember { mutableStateOf(false)}
@@ -88,16 +105,16 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val showDialog by showAnalyticsDialog
-                if (showDialog) {
+                val analyticsDialogShowing by viewModel.analyticsDialogShowing.collectAsState()
+                if (analyticsDialogShowing) {
                     AlertDialog(
                         onDismissRequest = {
-                            showAnalyticsDialog.value = false
+                            viewModel.setAnalyticsDialogShowing(false)
                         },
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    showAnalyticsDialog.value = false
+                                    viewModel.setAnalyticsDialogShowing(false)
                                 }
                             ) {
                                 Text("OK")
@@ -115,53 +132,82 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        initializationTasks()
-        requestNotificationPermission()
+        // These launchers are initialized here because they must be initialized before the
+        // activity reaches the STARTED state. Registering them in a coroutine results in
+        // them being registered too late.
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            permissionResult.complete(isGranted)
+            println("permission granted: $isGranted")
+        }
+
+        requestBatteryLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            batteryResult.complete(Unit)
+            println("battery result done")
+        }
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            initializationTasks() // shows analytics dialog
+
+            // wait for analytics dialog to be dismissed
+            viewModel.analyticsDialogShowing.first { it == false }
+
+            if (!hasNotificationPermission()) {
+                // possibly shows notification permissions dialog
+                // and doesn't return until dialog is dismissed
+                requestNotificationPermission()
+            }
+
+            // possibly redirect to battery optimizations settings and doesn't return
+            // until complete.
+            requestIgnoreBatteryOptimizations(this@MainActivity)
+
+            checkForUpdate()
+        }
+
     }
 
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            // previous versions don't require permission to show notifications
+    private suspend fun checkForUpdate() {
+        val update = updateManager.checkForUpdate()
+        if (!update.available) {
             return
         }
 
-        // Initialize the permission launcher
-        val requestPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (!isGranted) {
-                // Permission is granted. You can show notifications.
-            } else {
-                // Permission is denied. Handle accordingly.
-            }
+        try {
+            updateManager.installUpdate(update.url, update.version)
+            // Regardless of whether user clicks 'cancel' or 'install' at the dialog,
+            // we still don't want to show a notification for this version again.
+            updateManager.ignoreUpdate(update.version)
 
-            // We want to request to ignore battery optimizations after requesting notifications
-            // permission regardless of whether the user clicked yes or no.
-            requestIgnoreBatteryOptimizations(this@MainActivity)
+        } catch (e: IOException) {
+            Log.e(javaClass.simpleName, "IOException downloading update")
         }
-
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission is already granted. Can show notification.
-
-                // We want to request to ignore battery optimizations regardless even
-                // if the user already granted notification permission on a previous app run.
-                requestIgnoreBatteryOptimizations(this@MainActivity)
-            }
-            else -> {
-                // Request the permission
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-
     }
 
-    // Returns whether the app is already ignoring battery optimizations
+    private fun hasNotificationPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private suspend fun requestNotificationPermission() {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                // previous versions don't require permission to show notifications
+                return
+            }
+
+            // Reset the CompletableDeferred for new permission requests
+            if (permissionResult.isCompleted) {
+                permissionResult = CompletableDeferred()
+            }
+
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            permissionResult.await()
+    }
+
     @SuppressLint("BatteryLife")
-    fun requestIgnoreBatteryOptimizations(activity: Activity) {
+    private suspend fun requestIgnoreBatteryOptimizations(activity: Activity) {
         // https://stackoverflow.com/a/33114136/6716264
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -175,32 +221,33 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        val intent = Intent()
-        intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-        val uriString = "package:${activity.packageName}"
-        Log.d(TAG, "uri string: $uriString")
-        intent.data = Uri.parse(uriString)
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = Uri.parse("package:${activity.packageName}")
+        }
 
-        activity.startActivity(intent)
+        // reset for new requests
+        if (batteryResult.isCompleted) {
+            batteryResult = CompletableDeferred()
+        }
+
+        requestBatteryLauncher.launch(intent)
+        batteryResult.await()
     }
 
     // Checks if this is the first time the app has been run. If yes,
     // then a device ID is generated and the analytics dialog are shown.
-    fun initializationTasks() {
+    suspend fun initializationTasks() {
         val viewModel: HomeViewModel by viewModels()
-        lifecycleScope.launch(Dispatchers.IO) {
-            val previouslyInitialized = viewModel.previouslyInitialized()
-            if (!previouslyInitialized) {
-                runOnUiThread {
-                    showAnalyticsDialog.value = true
-                }
-                val deviceID = UUID.randomUUID().toString()
-                viewModel.saveDeviceID(deviceID)
-                viewModel.setPreviouslyInitialized()
-            }
 
-            viewModel.initializationTasksFinished()
+        val previouslyInitialized = viewModel.previouslyInitialized()
+        if (!previouslyInitialized) {
+            viewModel.setAnalyticsDialogShowing(true)
+            val deviceID = UUID.randomUUID().toString()
+            viewModel.saveDeviceID(deviceID)
+            viewModel.setPreviouslyInitialized()
         }
+
+        viewModel.initializationTasksFinished()
     }
 }
 

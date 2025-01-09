@@ -9,7 +9,8 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
-
+import java.io.File
+import java.io.IOException
 
 // Use this to inject current version:
 // BuildConfig.VERSION_NAME.toVersion(strict = false)
@@ -18,6 +19,7 @@ class UpdateManagerImpl (
     private val currentVersion: Version,
     private val releasesRepo: GithubReleasesRepo,
     private val apkInstaller: APKInstaller,
+    private val storagePath: File, // should be cache dir. inject it so that we don't need to pass a context to a method.
     private val timeSource: TimeSource = TimeSource.Monotonic,
     ): UpdateManager {
 
@@ -72,10 +74,42 @@ class UpdateManagerImpl (
         return UpdateDetails(available = updateAvailable, version = releaseInfo.version, url)
     }
 
-    override fun installUpdate(url: String) {
-        // download update
+    suspend fun checkForUpdateTest(): UpdateDetails {
+        val releaseInfo: ReleaseInfo
+        try {
+            releaseInfo = releasesRepo.getLatestRelease()
+        } catch (e: Exception) {
+            Log.e(javaClass.simpleName, "failed update check: $e")
+            return UpdateDetails(
+                available = false,
+                version = "",
+                url = "",
+            )
+        }
 
-        //apkInstaller.install()
+        return UpdateDetails(available = true, version = releaseInfo.version, releaseInfo.url)
+    }
+
+    // Recommended to pass context.getCacheDir() for storagePath
+    // Tries to download update file and offer to install it.
+    // @throws IOException if file fails to download
+    override fun installUpdate(url: String, version: String) {
+        val outputFile = File(storagePath, "proxy-control-${version}.apk")
+
+        if (!outputFile.exists()) {
+            Log.d(javaClass.simpleName, "File does not exist. downloading.")
+            try {
+                downloadFile(url, outputFile)
+                println("File downloaded successfully to ${outputFile.absolutePath}")
+            } catch (e: IOException) {
+                println("Failed to download file: ${e.message}")
+                throw e
+            }
+        } else {
+            Log.d(javaClass.simpleName, "File already existed. not downloading.")
+        }
+
+        apkInstaller.install(outputFile)
     }
 
     override fun ignoreUpdate(version: String) {

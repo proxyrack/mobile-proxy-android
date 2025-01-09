@@ -1,5 +1,7 @@
 package com.proxyrack.control.domain.updates
 
+import java.io.File
+
 
 /*
 * Goals:
@@ -13,6 +15,6 @@ data class UpdateDetails(val available: Boolean, val version: String, val url: S
 
 interface UpdateManager {
     suspend fun checkForUpdate(ignoreCache: Boolean = false): UpdateDetails
-    fun installUpdate(url: String)
+    fun installUpdate(url: String, version: String)
     fun ignoreUpdate(version: String)
 }
