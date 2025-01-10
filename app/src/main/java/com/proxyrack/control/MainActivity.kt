@@ -45,9 +45,11 @@ import com.proxyrack.control.ui.navigation.Screen
 import com.proxyrack.control.ui.screens.HomeScreen
 import com.proxyrack.control.ui.screens.HomeViewModel
 import com.proxyrack.control.ui.screens.SettingsScreen
+import com.proxyrack.control.ui.screens.UpdatesViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -60,14 +62,13 @@ class MainActivity : ComponentActivity() {
 
     private val TAG = javaClass.simpleName
 
-    @Inject lateinit var updateManager: UpdateManager
-
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private var permissionResult = CompletableDeferred<Boolean>()
 
     private lateinit var requestBatteryLauncher: ActivityResultLauncher<Intent>
     private var batteryResult = CompletableDeferred<Unit>()
 
+    val analyticsDialogShowing = MutableStateFlow<Boolean>(false)
 
     @OptIn(ExperimentalMaterial3Api::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -79,6 +80,7 @@ class MainActivity : ComponentActivity() {
         )
 
         val viewModel: HomeViewModel by viewModels()
+        val updatesViewModel: UpdatesViewModel by viewModels()
 
         setContent {
             ProxyControlTheme {
@@ -105,16 +107,16 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val analyticsDialogShowing by viewModel.analyticsDialogShowing.collectAsState()
-                if (analyticsDialogShowing) {
+                val showAnalyticsDialog by analyticsDialogShowing.collectAsState()
+                if (showAnalyticsDialog) {
                     AlertDialog(
                         onDismissRequest = {
-                            viewModel.setAnalyticsDialogShowing(false)
+                            analyticsDialogShowing.value = false
                         },
                         confirmButton = {
                             TextButton(
                                 onClick = {
-                                    viewModel.setAnalyticsDialogShowing(false)
+                                    analyticsDialogShowing.value = false
                                 }
                             ) {
                                 Text("OK")
@@ -125,6 +127,40 @@ class MainActivity : ComponentActivity() {
                         },
                         text = {
                             Text("This app uses anonymous analytics. You can opt out in the settings page.")
+                        }
+                    )
+
+                }
+
+                val showUpdateDialog by updatesViewModel.updateDialogShowing.collectAsState()
+                if (showUpdateDialog) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            updatesViewModel.ignoreUpdate()
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
+                                    updatesViewModel.ignoreUpdate()
+                                }
+                            ) {
+                                Text("No")
+                            }
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    updatesViewModel.installUpdate()
+                                }
+                            ) {
+                                Text("Yes")
+                            }
+                        },
+                        title = {
+                            Text(text = "Update Available")
+                        },
+                        text = {
+                            Text("An update is available. It can be installed automatically. \n\n This app will request permission to install apps. \n\nDo you want to install the update now?")
                         }
                     )
 
@@ -153,7 +189,7 @@ class MainActivity : ComponentActivity() {
             initializationTasks() // shows analytics dialog
 
             // wait for analytics dialog to be dismissed
-            viewModel.analyticsDialogShowing.first { it == false }
+            analyticsDialogShowing.first { it == false }
 
             if (!hasNotificationPermission()) {
                 // possibly shows notification permissions dialog
@@ -165,26 +201,9 @@ class MainActivity : ComponentActivity() {
             // until complete.
             requestIgnoreBatteryOptimizations(this@MainActivity)
 
-            checkForUpdate()
+            updatesViewModel.checkForUpdate()
         }
 
-    }
-
-    private suspend fun checkForUpdate() {
-        val update = updateManager.checkForUpdate()
-        if (!update.available) {
-            return
-        }
-
-        try {
-            updateManager.installUpdate(update.url, update.version)
-            // Regardless of whether user clicks 'cancel' or 'install' at the dialog,
-            // we still don't want to show a notification for this version again.
-            updateManager.ignoreUpdate(update.version)
-
-        } catch (e: IOException) {
-            Log.e(javaClass.simpleName, "IOException downloading update")
-        }
     }
 
     private fun hasNotificationPermission(): Boolean {
@@ -241,7 +260,7 @@ class MainActivity : ComponentActivity() {
 
         val previouslyInitialized = viewModel.previouslyInitialized()
         if (!previouslyInitialized) {
-            viewModel.setAnalyticsDialogShowing(true)
+            analyticsDialogShowing.value = true
             val deviceID = UUID.randomUUID().toString()
             viewModel.saveDeviceID(deviceID)
             viewModel.setPreviouslyInitialized()

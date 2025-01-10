@@ -17,6 +17,7 @@ android {
         minSdk = 21
         targetSdk = 34
         versionCode = 1
+        // We don't need to update this manually. Our ci/cd pipeline does it before a github release
         versionName = "1.3.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -44,7 +44,7 @@ class UpdateManagerImpl (
             Log.e(javaClass.simpleName, "failed update check: $e")
             return UpdateDetails(
                 available = false,
-                version = "",
+                version = "0", // good practise to always have a value to prevent version parsing lib from crashing
                 url = "",
             )
         }
@@ -52,11 +52,11 @@ class UpdateManagerImpl (
         lastCheckedAt = timeSource.markNow()
 
         val latestReleaseVersion = releaseInfo.version.toVersion(strict = false)
-
+        Log.d(javaClass.simpleName, "about to check against previouslyIgnoredVersion: $previouslyIgnoredVersion")
         if (!ignoreCache && latestReleaseVersion == previouslyIgnoredVersion.toVersion(strict = false)) {
             return UpdateDetails(
                 available = false,
-                version = "",
+                version = "0", // good practise to always have a value to prevent version parsing lib from crashing
                 url = "",
             )
         }
@@ -97,6 +97,7 @@ class UpdateManagerImpl (
     }
 
     override fun ignoreUpdate(version: String) {
+        Log.d(javaClass.simpleName, "ignoring version: $version")
         previouslyIgnoredVersion = version
     }
 
