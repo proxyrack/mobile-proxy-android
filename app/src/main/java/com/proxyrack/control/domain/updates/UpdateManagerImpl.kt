@@ -52,7 +52,7 @@ class UpdateManagerImpl (
         lastCheckedAt = timeSource.markNow()
 
         val latestReleaseVersion = releaseInfo.version.toVersion(strict = false)
-        Log.d(javaClass.simpleName, "about to check against previouslyIgnoredVersion: $previouslyIgnoredVersion")
+
         if (!ignoreCache && latestReleaseVersion == previouslyIgnoredVersion.toVersion(strict = false)) {
             return UpdateDetails(
                 available = false,
@@ -97,7 +97,6 @@ class UpdateManagerImpl (
     }
 
     override fun ignoreUpdate(version: String) {
-        Log.d(javaClass.simpleName, "ignoring version: $version")
         previouslyIgnoredVersion = version
     }
 
