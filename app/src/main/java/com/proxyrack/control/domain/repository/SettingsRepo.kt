@@ -6,6 +6,7 @@ interface SettingsRepo {
     val initialized: DataAccessor // whether the app has run at least once
     val analyticsEnabled: DataAccessor
     val ipRotationInterval: DataAccessor
+    val bandwidthSharingEnabled: DataAccessor
 }
 
 

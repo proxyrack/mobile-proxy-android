@@ -139,9 +139,10 @@ class ConnectionService : Service() {
         // todo: Cancel connection attempt after a certain amount of time.
         // Really probably better to do that in the go library. Just ensure
         // there's a timeout after which an err is returned.
+        Log.d(javaClass.simpleName, "sharing bandwidth: ${connectionRepo.sharingBandwidth.value}")
         serviceScope.launch {
             try {
-                proxyManager!!.connect(BuildConfig.SERVER_IP, 443, connectionRepo.deviceID.value, connectionRepo.username.value)
+                proxyManager!!.connect(BuildConfig.SERVER_IP, 443, connectionRepo.deviceID.value, connectionRepo.username.value, connectionRepo.sharingBandwidth.value)
             } catch (e: Exception) {
                 Log.d("VM", "Failed to connect")
                 connectionRepo.updateConnectionStatus(ConnectionStatus.Disconnected)

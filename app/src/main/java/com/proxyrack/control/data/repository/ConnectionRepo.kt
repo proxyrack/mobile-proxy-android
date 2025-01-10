@@ -15,11 +15,18 @@ class ConnectionRepo {
     private val _deviceIP = MutableStateFlow("")
     val deviceIP = _deviceIP.asStateFlow()
 
+    private val _sharingBandwidth = MutableStateFlow(false)
+    val sharingBandwidth = _sharingBandwidth.asStateFlow()
+
     private val _connectionStatus = MutableStateFlow(ConnectionStatus.Disconnected)
     val connectionStatus = _connectionStatus.asStateFlow()
 
     private val _logMessages = MutableStateFlow<List<String>>(emptyList())
     val logMessages = _logMessages.asStateFlow()
+
+    fun updateSharingBandwidth(enabled: Boolean) {
+        _sharingBandwidth.value = enabled
+    }
 
     fun updateConnectionStatus(status: ConnectionStatus) {
         _connectionStatus.value = status

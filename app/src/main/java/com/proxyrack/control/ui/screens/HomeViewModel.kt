@@ -52,6 +52,9 @@ class HomeViewModel @Inject constructor(
         connectionRepo.updateUsername(savedUsername)
         connectionRepo.updateDeviceID(savedDeviceID)
 
+        val sharingBandwidth = settingsRepo.bandwidthSharingEnabled.get() == "true"
+        connectionRepo.updateSharingBandwidth(sharingBandwidth)
+
         val rotationIntervalText = settingsRepo.ipRotationInterval.get()
         setIPRotationInterval(rotationIntervalText)
     }
