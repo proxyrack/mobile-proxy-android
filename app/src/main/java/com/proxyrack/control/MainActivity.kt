@@ -160,7 +160,7 @@ class MainActivity : ComponentActivity() {
                             Text(text = "Update Available")
                         },
                         text = {
-                            Text("An update is available. It can be installed automatically. \n\n This app will request permission to install apps. \n\nDo you want to install the update now?")
+                            Text("An update is available. It can be installed automatically. \n\nThis app will request permission to install apps. \n\nDo you want to install the update now?")
                         }
                     )
 
