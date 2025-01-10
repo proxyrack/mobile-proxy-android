@@ -44,7 +44,7 @@ class UpdateManagerImpl (
             Log.e(javaClass.simpleName, "failed update check: $e")
             return UpdateDetails(
                 available = false,
-                version = "",
+                version = "0", // good practise to always have a value to prevent version parsing lib from crashing
                 url = "",
             )
         }
@@ -56,7 +56,7 @@ class UpdateManagerImpl (
         if (!ignoreCache && latestReleaseVersion == previouslyIgnoredVersion.toVersion(strict = false)) {
             return UpdateDetails(
                 available = false,
-                version = "",
+                version = "0", // good practise to always have a value to prevent version parsing lib from crashing
                 url = "",
             )
         }
