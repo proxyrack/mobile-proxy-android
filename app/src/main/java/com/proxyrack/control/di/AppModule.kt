@@ -59,9 +59,10 @@ object AppModule {
         @Named("initialized") initializedAccessor: DataAccessor,
         @Named("analytics") analyticsAccessor: DataAccessor,
         @Named("ipRotationInterval") ipRotationIntervalAccessor: DataAccessor,
+        @Named("bandwidthSharingEnabled") bandwidthSharingAccessor: DataAccessor,
     ): SettingsRepo {
         return SettingsRepoImpl(deviceIDAccessor, usernameAccessor, initializedAccessor,
-            analyticsAccessor, ipRotationIntervalAccessor)
+            analyticsAccessor, ipRotationIntervalAccessor, bandwidthSharingAccessor)
     }
 
     @Provides
@@ -106,6 +107,13 @@ object AppModule {
     @Named("analytics")
     fun provideAnalyticsAccessor(datastore: DataStore<Preferences>): DataAccessor {
         return DataAccessorImpl(datastore, "analytics")
+    }
+
+    @Provides
+    @Singleton
+    @Named("bandwidthSharingEnabled")
+    fun provideBandwidthSharingAccessor(datastore: DataStore<Preferences>): DataAccessor {
+        return DataAccessorImpl(datastore, "bandwidthSharingEnabled")
     }
 
     @Provides

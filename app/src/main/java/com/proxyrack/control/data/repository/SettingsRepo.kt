@@ -9,5 +9,6 @@ class SettingsRepoImpl(
     override val initialized: DataAccessor,
     override val analyticsEnabled: DataAccessor,
     override val ipRotationInterval: DataAccessor,
+    override val bandwidthSharingEnabled: DataAccessor,
     ) : SettingsRepo {
 }
