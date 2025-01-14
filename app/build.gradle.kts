@@ -20,7 +20,7 @@ android {
         // We don't need to update this manually. Our ci/cd pipeline does it before a github release
         versionName = "1.3.8"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.proxyrack.control.HiltTestRunner"
     }
 
     signingConfigs {
@@ -103,6 +103,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
+    androidTestImplementation(libs.mockito.android)
+    androidTestImplementation(libs.mockito.kotlin)
     testImplementation(libs.mockwebserver)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 }

@@ -74,6 +74,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.SoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -84,8 +85,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.proxyrack.control.R
+import com.proxyrack.control.core.util.TestTags
 import com.proxyrack.control.ui.navigation.Screen
 import com.proxyrack.control.domain.ConnectionStatus
 import kotlinx.coroutines.CoroutineScope
@@ -95,7 +98,7 @@ import kotlinx.coroutines.launch
 var purple = Color(0xff4A28C6)
 
 @Composable
-fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
+fun HomeScreen(navController: NavController, viewModel: HomeViewModel = hiltViewModel()) {
     val coroutineScope = rememberCoroutineScope()
     var scrollState = rememberScrollState()
     var showBottomSheet = remember { mutableStateOf(false) }
@@ -207,7 +210,7 @@ fun HomeScreen(navController: NavController, viewModel: HomeViewModel) {
                 },
                 enabled = connectionStatus == ConnectionStatus.Disconnected,
                 isError = deviceIdErrMsg.value.isNotEmpty(),
-                modifier = Modifier.padding(top = 20.dp).fillMaxWidth())
+                modifier = Modifier.padding(top = 20.dp).fillMaxWidth().testTag(TestTags.DEVICE_ID))
             if (deviceIdErrMsg.value.isNotEmpty()) {
                 Text(
                     deviceIdErrMsg.value,
