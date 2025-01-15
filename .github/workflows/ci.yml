@@ -48,6 +48,7 @@ jobs:
           arch: x86_64
           # To find list of device ids:
           # avdmanager list device
+          # Must have cli tools to run above command: https://stackoverflow.com/a/64389804/6716264
           profile: pixel_7_pro
           script: ./gradlew connectedCheck
 
