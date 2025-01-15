@@ -3,6 +3,7 @@ agp = "8.7.0"
 converterGson = "2.9.0"
 datastorePreferences = "1.1.1"
 desugar_jdk_libs = "2.1.4"
+dexmaker = "2.28.4"
 hiltAndroid = "2.52"
 kotlin = "2.0.0"
 coreKtx = "1.10.1"
@@ -15,6 +16,7 @@ activityCompose = "1.8.0"
 composeBom = "2024.04.01"
 loggingInterceptor = "4.9.3"
 materialIconsCore = "1.7.6"
+mockitoAndroid = "5.15.2"
 mockitoCore = "5.14.2"
 mockitoKotlin = "5.4.0"
 mockwebserver = "4.12.0"
@@ -35,6 +37,8 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
+dexmaker = { module = "com.linkedin.dexmaker:dexmaker", version.ref = "dexmaker" }
+dexmaker-mockito = { module = "com.linkedin.dexmaker:dexmaker-mockito", version.ref = "dexmaker" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
@@ -54,6 +58,7 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3",
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesAndroid" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
+mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "mockwebserver" }

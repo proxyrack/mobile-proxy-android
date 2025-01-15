@@ -79,7 +79,6 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(0)
         )
 
-        val viewModel: HomeViewModel by viewModels()
         val updatesViewModel: UpdatesViewModel by viewModels()
 
         setContent {
@@ -101,7 +100,7 @@ class MainActivity : ComponentActivity() {
                         startDestination = Screen.Home.route,
                         modifier = Modifier.padding(bottom = contentPadding.calculateBottomPadding())
                     ) {
-                        composable(Screen.Home.route) { HomeScreen(navController, viewModel) }
+                        composable(Screen.Home.route) { HomeScreen(navController) }
                         composable(Screen.Settings.route) { SettingsScreen(navController) }
                         // Add more composable destinations as needed
                     }
