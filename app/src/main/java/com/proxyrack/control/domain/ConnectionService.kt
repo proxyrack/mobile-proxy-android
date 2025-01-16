@@ -16,14 +16,14 @@ import com.proxyrack.control.MainActivity
 import com.proxyrack.control.R
 import com.proxyrack.control.data.repository.ConnectionRepo
 import com.proxyrack.control.data.repository.IpInfoRepository
-import com.proxyrack.proxylib.android.Android.newManager
-import com.proxyrack.proxylib.android.Manager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.proxyrack.control.domain.proxy_manager.ProxyManager
+import com.proxyrack.control.domain.proxy_manager.ProxyManagerProvider
 
 
 @AndroidEntryPoint
@@ -37,11 +37,14 @@ class ConnectionService : Service() {
     @Inject
     lateinit var ipInfoRepo: IpInfoRepository
 
+    @Inject
+    lateinit var proxyManagerProvider: ProxyManagerProvider
+
     private val CHANNEL_ID = "ProxyControlForegroundServiceChannel"
 
     private val serviceScope = CoroutineScope(Dispatchers.IO)
 
-    private var proxyManager: Manager? = null
+    private var proxyManager: ProxyManager? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -81,7 +84,7 @@ class ConnectionService : Service() {
         Log.d(TAG,"MyApp pid ${pid}")
         Log.d(TAG,"MyApp cpu arch $cpuArch")
 
-        proxyManager = newManager(pid, "55", androidApiVersion, cpuArch)
+        proxyManager = proxyManagerProvider.new()
 
         proxyManager!!.registerOnLogEntryCallback { msg ->
             Log.d(TAG, "logEntryCallback msg: $msg")
