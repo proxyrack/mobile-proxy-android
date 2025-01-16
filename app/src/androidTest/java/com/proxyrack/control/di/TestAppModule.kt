@@ -22,6 +22,8 @@ import com.proxyrack.control.domain.ConnectionServiceLauncher
 import com.proxyrack.control.domain.ConnectionServiceLauncherImpl
 import com.proxyrack.control.domain.IPRotator
 import com.proxyrack.control.domain.IPRotatorImpl
+import com.proxyrack.control.domain.proxy_manager.ProxyManagerProvider
+import com.proxyrack.control.domain.proxy_manager.ProxyManagerProviderImpl
 import com.proxyrack.control.domain.repository.DataAccessor
 import com.proxyrack.control.domain.repository.GithubReleasesRepo
 import com.proxyrack.control.domain.repository.SettingsRepo
@@ -50,6 +52,12 @@ import org.mockito.kotlin.mock
     replaces = [AppModule::class]
 )
 object TestAppModule {
+
+    @Provides
+    @Singleton
+    fun provideProxyManagerProvider(): ProxyManagerProvider {
+        return ProxyManagerProviderImpl()
+    }
 
     @Provides
     @Singleton
