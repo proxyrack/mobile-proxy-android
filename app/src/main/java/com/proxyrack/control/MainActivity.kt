@@ -40,7 +40,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.proxyrack.control.domain.updates.UpdateManager
 import com.proxyrack.control.ui.navigation.Screen
 import com.proxyrack.control.ui.screens.HomeScreen
 import com.proxyrack.control.ui.screens.HomeViewModel
@@ -52,9 +51,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
-import java.io.IOException
-import javax.inject.Inject
 
 
 @AndroidEntryPoint
@@ -200,7 +198,11 @@ class MainActivity : ComponentActivity() {
             // until complete.
             requestIgnoreBatteryOptimizations(this@MainActivity)
 
-            updatesViewModel.checkForUpdate()
+            // This must run on main thread since it's possible that this is the first time that
+            // the delegate that creates the UpdatesViewModel lazily has been called.
+            withContext(Dispatchers.Main) {
+                updatesViewModel.checkForUpdate()
+            }
         }
 
     }
