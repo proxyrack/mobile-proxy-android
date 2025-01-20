@@ -29,10 +29,12 @@ class UpdatesViewModel @Inject constructor(private val updateManager: UpdateMana
     private val _updateDialogShowing = MutableStateFlow<Boolean>(false)
     val updateDialogShowing = _updateDialogShowing.asStateFlow()
 
-    suspend fun checkForUpdate() {
-        update = updateManager.checkForUpdate()
-        if (update.available) {
-            setDialogShowing(true)
+    fun checkForUpdate() {
+        viewModelScope.launch(Dispatchers.IO) {
+            update = updateManager.checkForUpdate()
+            if (update.available) {
+                setDialogShowing(true)
+            }
         }
     }
 
