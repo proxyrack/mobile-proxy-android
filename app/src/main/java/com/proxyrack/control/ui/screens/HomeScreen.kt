@@ -70,6 +70,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -510,16 +511,19 @@ fun Header(navController: NavController, viewModel: HomeViewModel) {
     val connectionStatus by viewModel.connectionStatus.collectAsState()
     val painter: Painter = painterResource(id = R.drawable.header_bg)
 
+    val headerHeight = 188.dp
     Column {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(headerHeight)
                 .clip(RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp))
         ) {
             Image(
                 painter = painter,
                 contentDescription = "Header Background",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
 
             // Header content on top of background
