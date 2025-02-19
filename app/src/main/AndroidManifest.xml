@@ -72,8 +72,10 @@
     <!-- enable profiling when starting transactions, adjust in production env -->
     <meta-data android:name="io.sentry.traces.profiling.sample-rate" android:value="1.0" />
     <!-- enable session replay -->
-    <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />
-    <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.0" />
+    <!-- Session replay is causing a crash on some devices.
+    We'll disable it for now as it's a new unstable feature. -->
+    <!--    <meta-data android:name="io.sentry.session-replay.on-error-sample-rate" android:value="1.0" />-->
+    <!--    <meta-data android:name="io.sentry.session-replay.session-sample-rate" android:value="0.0" />-->
 
     </application>
 
