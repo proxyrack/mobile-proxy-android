@@ -1,9 +1,11 @@
 package com.proxyrack.control.ui.screens
 
 import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -629,7 +631,18 @@ fun SetupInstructionsLink(modifier: Modifier = Modifier) {
                 // Log.d("link URL", it.item)
 
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(it.item))
-                context.startActivity(intent)
+
+                try {
+                    context.startActivity(intent)
+                } catch (e: ActivityNotFoundException) {
+                    // No app can handle the intent
+                    Log.e("SetupInstructionsLink", e.toString())
+                    Toast.makeText(context, "No application can handle this request. Please install a web browser.", Toast.LENGTH_LONG).show()
+                } catch (e: SecurityException) {
+                    // Selected app is not exported or lacks permissions
+                    Log.e("SetupInstructionsLink", e.toString())
+                    Toast.makeText(context, "Unable to open the link. Please try another app or check your settings.", Toast.LENGTH_LONG).show()
+                }
             }
         })
 }
